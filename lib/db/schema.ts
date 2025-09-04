@@ -1,0 +1,388 @@
+import { relations } from "drizzle-orm";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  integer,
+  boolean,
+  pgEnum,
+  index,
+  real,
+} from "drizzle-orm/pg-core";
+
+// Enums (for fixed values only)
+export const wordStatusEnum = pgEnum("word_status", [
+  "pending",
+  "approved",
+  "rejected",
+  "needs-review",
+]);
+
+export const voteTypeEnum = pgEnum("vote_type", ["up", "down"]);
+
+export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
+
+// Reference Tables
+export const generations = pgTable(
+  "generations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 20 }).notNull().unique(), // 'gen-alpha', 'gen-z', etc
+    name: varchar("name", { length: 50 }).notNull(), // 'Generasi Alpha', 'Generasi Z'
+    shortName: varchar("short_name", { length: 20 }).notNull(), // 'Gen Alpha', 'Gen Z'
+    description: text("description"),
+    startYear: integer("start_year").notNull(),
+    endYear: integer("end_year"),
+    colorClass: varchar("color_class", { length: 50 }).notNull(), // 'bg-purple-100 text-purple-700'
+    iconClass: varchar("icon_class", { length: 50 }), // Optional icon
+    sortOrder: integer("sort_order").default(0),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    codeIdx: index("generations_code_idx").on(table.code),
+    activeIdx: index("generations_active_idx").on(table.isActive),
+    sortIdx: index("generations_sort_idx").on(table.sortOrder),
+  })
+);
+
+export const languages = pgTable(
+  "languages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 20 }).notNull().unique(), // 'indonesian', 'english', etc
+    name: varchar("name", { length: 50 }).notNull(), // 'Bahasa Indonesia', 'English'
+    nativeName: varchar("native_name", { length: 50 }), // 'Bahasa Indonesia', 'English'
+    description: text("description"),
+    colorClass: varchar("color_class", { length: 50 }).notNull(),
+    flag: varchar("flag", { length: 10 }), // Emoji flag: 🇮🇩, 🇺🇸
+    sortOrder: integer("sort_order").default(0),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    codeIdx: index("languages_code_idx").on(table.code),
+    activeIdx: index("languages_active_idx").on(table.isActive),
+    sortIdx: index("languages_sort_idx").on(table.sortOrder),
+  })
+);
+
+// Core Tables
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    username: varchar("username", { length: 50 }).notNull().unique(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    displayName: varchar("display_name", { length: 100 }),
+    avatar: text("avatar"),
+    bio: text("bio"),
+    totalVotes: integer("total_votes").default(0),
+    totalWordCount: integer("total_word_count").default(0),
+    role: userRoleEnum("role").default("user"),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    usernameIdx: index("users_username_idx").on(table.username),
+    emailIdx: index("users_email_idx").on(table.email),
+  })
+);
+
+export const words = pgTable(
+  "words",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    term: varchar("term", { length: 100 }).notNull(),
+    slug: varchar("slug", { length: 120 }).notNull().unique(),
+    context: text("context"), // Contoh kalimat dimana kata ini digunakan
+    requestedBy: uuid("requested_by").references(() => users.id),
+    totalViews: integer("total_views").default(0),
+    totalExplanations: integer("total_explanations").default(0),
+    totalVotes: integer("total_votes").default(0),
+    status: wordStatusEnum("status").default("pending"),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    termIdx: index("words_term_idx").on(table.term),
+    slugIdx: index("words_slug_idx").on(table.slug),
+    statusIdx: index("words_status_idx").on(table.status),
+    viewsIdx: index("words_views_idx").on(table.totalViews),
+  })
+);
+
+export const explanations = pgTable(
+  "explanations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id),
+    content: text("content").notNull(),
+    example: text("example"),
+    votes: integer("votes").default(0),
+    wordCount: integer("word_count").default(0),
+    isAccepted: boolean("is_accepted").default(false),
+    isFeatured: boolean("is_featured").default(false),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    wordIdx: index("explanations_word_idx").on(table.wordId),
+    userIdx: index("explanations_user_idx").on(table.userId),
+    votesIdx: index("explanations_votes_idx").on(table.votes),
+    acceptedIdx: index("explanations_accepted_idx").on(table.isAccepted),
+  })
+);
+
+export const votes = pgTable(
+  "votes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id),
+    explanationId: uuid("explanation_id").references(() => explanations.id, {
+      onDelete: "cascade",
+    }),
+    type: voteTypeEnum("type").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    userExplanationIdx: index("votes_user_explanation_idx").on(
+      table.userId,
+      table.explanationId
+    ),
+    explanationIdx: index("votes_explanation_idx").on(table.explanationId),
+  })
+);
+
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    explanationId: uuid("explanation_id").references(() => explanations.id, {
+      onDelete: "cascade",
+    }),
+    userId: uuid("user_id").references(() => users.id),
+    content: text("content").notNull(),
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    explanationIdx: index("comments_explanation_idx").on(table.explanationId),
+    userIdx: index("comments_user_idx").on(table.userId),
+  })
+);
+
+// Many-to-Many Relationship Tables (Updated to use FK)
+export const wordGenerations = pgTable(
+  "word_generations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }),
+    generationId: uuid("generation_id").references(() => generations.id, {
+      onDelete: "cascade",
+    }),
+    isPrimary: boolean("is_primary").default(false),
+    startYear: integer("start_year"),
+    confidence: real("confidence").default(0.5), // 0-1 scale
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    wordIdx: index("word_generations_word_idx").on(table.wordId),
+    generationIdx: index("word_generations_generation_idx").on(
+      table.generationId
+    ),
+    uniqueWordGeneration: index("word_generations_unique_idx").on(
+      table.wordId,
+      table.generationId
+    ),
+  })
+);
+
+export const wordLanguages = pgTable(
+  "word_languages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }),
+    languageId: uuid("language_id").references(() => languages.id, {
+      onDelete: "cascade",
+    }),
+    isPrimary: boolean("is_primary").default(false),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    wordIdx: index("word_languages_word_idx").on(table.wordId),
+    languageIdx: index("word_languages_language_idx").on(table.languageId),
+    uniqueWordLanguage: index("word_languages_unique_idx").on(
+      table.wordId,
+      table.languageId
+    ),
+  })
+);
+
+// Analytics Tables
+export const dailyMetrics = pgTable(
+  "daily_metrics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    date: timestamp("date").notNull().unique(),
+    totalWords: integer("total_words").default(0),
+    totalExplanations: integer("total_explanations").default(0),
+    totalUsers: integer("total_users").default(0),
+    totalVotes: integer("total_votes").default(0),
+    activeUsers: integer("active_users").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    dateIdx: index("daily_metrics_date_idx").on(table.date),
+  })
+);
+
+export const wordViews = pgTable(
+  "word_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    wordId: uuid("word_id").references(() => words.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => users.id), // nullable untuk anonymous views
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    wordIdx: index("word_views_word_idx").on(table.wordId),
+    dateIdx: index("word_views_date_idx").on(table.createdAt),
+  })
+);
+
+// Admin Tables
+export const moderationQueue = pgTable(
+  "moderation_queue",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    contentType: varchar("content_type", { length: 50 }).notNull(), // 'word', 'explanation', 'comment'
+    contentId: uuid("content_id").notNull(),
+    reportedBy: uuid("reported_by").references(() => users.id),
+    reason: text("reason"),
+    status: varchar("status", { length: 20 }).default("pending"), // 'pending', 'reviewed', 'resolved'
+    assignedTo: uuid("assigned_to").references(() => users.id), // nullable
+    reviewNotes: text("review_notes"),
+    createdAt: timestamp("created_at").defaultNow(),
+    reviewedAt: timestamp("reviewed_at"),
+  },
+  (table) => ({
+    statusIdx: index("moderation_queue_status_idx").on(table.status),
+    contentIdx: index("moderation_queue_content_idx").on(
+      table.contentType,
+      table.contentId
+    ),
+  })
+);
+
+// Relations
+export const generationsRelations = relations(generations, ({ many }) => ({
+  wordGenerations: many(wordGenerations),
+}));
+
+export const languagesRelations = relations(languages, ({ many }) => ({
+  wordLanguages: many(wordLanguages),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  requestedWords: many(words),
+  explanations: many(explanations),
+  votes: many(votes),
+  comments: many(comments),
+}));
+
+export const wordsRelations = relations(words, ({ one, many }) => ({
+  requestedBy: one(users, {
+    fields: [words.requestedBy],
+    references: [users.id],
+  }),
+  explanations: many(explanations),
+  generations: many(wordGenerations),
+  languages: many(wordLanguages),
+  wordViews: many(wordViews),
+}));
+
+export const explanationsRelations = relations(
+  explanations,
+  ({ one, many }) => ({
+    word: one(words, {
+      fields: [explanations.wordId],
+      references: [words.id],
+    }),
+    user: one(users, {
+      fields: [explanations.userId],
+      references: [users.id],
+    }),
+    votes: many(votes),
+    comments: many(comments),
+  })
+);
+
+export const votesRelations = relations(votes, ({ one }) => ({
+  user: one(users, {
+    fields: [votes.userId],
+    references: [users.id],
+  }),
+  explanation: one(explanations, {
+    fields: [votes.explanationId],
+    references: [explanations.id],
+  }),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  explanation: one(explanations, {
+    fields: [comments.explanationId],
+    references: [explanations.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const wordGenerationsRelations = relations(
+  wordGenerations,
+  ({ one }) => ({
+    word: one(words, {
+      fields: [wordGenerations.wordId],
+      references: [words.id],
+    }),
+    generation: one(generations, {
+      fields: [wordGenerations.generationId],
+      references: [generations.id],
+    }),
+  })
+);
+
+export const wordLanguagesRelations = relations(wordLanguages, ({ one }) => ({
+  word: one(words, {
+    fields: [wordLanguages.wordId],
+    references: [words.id],
+  }),
+  language: one(languages, {
+    fields: [wordLanguages.languageId],
+    references: [languages.id],
+  }),
+}));
+
+export const wordViewsRelations = relations(wordViews, ({ one }) => ({
+  word: one(words, {
+    fields: [wordViews.wordId],
+    references: [words.id],
+  }),
+  user: one(users, {
+    fields: [wordViews.userId],
+    references: [users.id],
+  }),
+}));

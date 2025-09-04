@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: istilahkata_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: istilahkata_user
+      POSTGRES_PASSWORD: istilahkata_password
+      POSTGRES_DB: istilahkata_dev
+    ports:
+      - "5433:5432" # Changed to 5433 to avoid conflict
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - istilahkata_network
+
+  # Redis untuk session management (optional, akan dipakai nanti)
+  redis:
+    image: redis:7-alpine
+    container_name: istilahkata_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - istilahkata_network
+
+volumes:
+  postgres_data:
+
+networks:
+  istilahkata_network:
+    driver: bridge
