@@ -1,13 +1,12 @@
-import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { env } from "@/env.mjs";
+
 import * as schema from "./schema";
 
-config({ path: ".env.local" });
-
 // For query purposes
-const queryClient = postgres(process.env.DATABASE_URL!);
+const queryClient = postgres(env.DATABASE_URL);
 export const db = drizzle(queryClient, { schema });
 
 // Export types for use in app
