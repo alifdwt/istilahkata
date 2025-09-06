@@ -72,6 +72,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "components/ui/**",
     ],
     rules: {
       "no-undef": "off",

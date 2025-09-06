@@ -1,28 +1,27 @@
+// lib/db/schema.ts
 import { relations } from "drizzle-orm";
 import {
   pgTable,
-  uuid,
-  varchar,
   text,
   timestamp,
-  integer,
   boolean,
-  pgEnum,
+  integer,
+  uuid,
+  varchar,
   index,
   real,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 
-// Enums (for fixed values only)
+// Enum definitions
+export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
 export const wordStatusEnum = pgEnum("word_status", [
   "pending",
   "approved",
   "rejected",
   "needs-review",
 ]);
-
 export const voteTypeEnum = pgEnum("vote_type", ["up", "down"]);
-
-export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
 
 // Reference Tables
 export const generations = pgTable(
@@ -53,9 +52,9 @@ export const languages = pgTable(
   "languages",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    code: varchar("code", { length: 20 }).notNull().unique(), // 'indonesian', 'english', etc
-    name: varchar("name", { length: 50 }).notNull(), // 'Bahasa Indonesia', 'English'
-    nativeName: varchar("native_name", { length: 50 }), // 'Bahasa Indonesia', 'English'
+    code: varchar("code", { length: 10 }).notNull().unique(), // id, en, jv, etc.
+    name: varchar("name", { length: 100 }).notNull(),
+    nativeName: varchar("native_name", { length: 50 }),
     description: text("description"),
     colorClass: varchar("color_class", { length: 50 }).notNull(),
     flag: varchar("flag", { length: 10 }), // Emoji flag: 🇮🇩, 🇺🇸
@@ -71,13 +70,14 @@ export const languages = pgTable(
   })
 );
 
-// Core Tables
+// Core Tables - Updated users table to work with Better Auth
 export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     username: varchar("username", { length: 50 }).notNull().unique(),
     email: varchar("email", { length: 255 }).notNull().unique(),
+    emailVerified: boolean("email_verified").default(false), // Required by Better Auth
     displayName: varchar("display_name", { length: 100 }),
     avatar: text("avatar"),
     bio: text("bio"),
@@ -94,6 +94,45 @@ export const users = pgTable(
   })
 );
 
+// Better Auth additional tables
+export const accounts = pgTable("accounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  expiresAt: timestamp("expires_at"),
+  password: text("password"), // For email/password auth
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const verificationTokens = pgTable("verification_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  identifier: text("identifier").notNull(),
+  token: text("token").notNull(),
+  expires: timestamp("expires").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Rest of the existing schema...
 export const words = pgTable(
   "words",
   {
@@ -181,7 +220,7 @@ export const comments = pgTable(
   })
 );
 
-// Many-to-Many Relationship Tables (Updated to use FK)
+// Many-to-Many Relationship Tables
 export const wordGenerations = pgTable(
   "word_generations",
   {
@@ -296,10 +335,28 @@ export const languagesRelations = relations(languages, ({ many }) => ({
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
+  // Auth relations
+  accounts: many(accounts),
+  sessions: many(sessions),
+  // App relations
   requestedWords: many(words),
   explanations: many(explanations),
   votes: many(votes),
   comments: many(comments),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const wordsRelations = relations(words, ({ one, many }) => ({
