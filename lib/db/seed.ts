@@ -602,7 +602,7 @@ async function main() {
       .sort((a, b) => b.votes - a.votes)
       .slice(0, 6)
       .forEach((exp, index) => {
-        const word = wordsData.find((w) => w.requestedBy === exp.userId);
+        // const word = wordsData.find((w) => w.requestedBy === exp.userId);
         console.log(
           `${index + 1}. ${Object.keys(wordMap).find(
             (k) => wordMap[k].id === exp.wordId

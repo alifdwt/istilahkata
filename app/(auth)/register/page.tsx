@@ -36,7 +36,7 @@ export default async function RegisterPage() {
           Sudah punya akun?{" "}
           <Link
             href="/login"
-            className="hover:text-brand underline underline-offset-4"
+            className="underline underline-offset-4 hover:text-primary"
           >
             Masuk di sini
           </Link>
