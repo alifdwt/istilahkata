@@ -1,4 +1,5 @@
 import {
+  ArrowUpRightIcon,
   EyeIcon,
   MessageCircleIcon,
   StarIcon,
@@ -6,71 +7,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
 
-interface DailyWords {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  meta: {
-    views: string;
-    likes: string;
-    comments: string;
-  };
-  tags: {
-    languages: string[];
-    generations: string[];
-  };
-  user: {
-    username: string;
-    generation: string;
-  };
-}
+import { getDailyWords } from "@/lib/db/queries/homepage";
 
-export default function DailyWordsSlot() {
-  const data: DailyWords[] = [
-    {
-      id: "1",
-      slug: "gabut",
-      title: "gabut",
-      description:
-        'Akronim dari "gaji buta". Kondisi bosan atau tidak ada kegiatan yang berarti.',
-      meta: {
-        views: "1.2k",
-        likes: "156",
-        comments: "23",
-      },
-      tags: {
-        languages: ["Bahasa Indonesia"],
-        generations: ["Generasi Z", "Milenial"],
-      },
-      user: {
-        username: "daud",
-        generation: "Generasi Z",
-      },
-    },
-    {
-      id: "2",
-      slug: "kepo",
-      title: "kepo",
-      description:
-        "Sifat ingin tahu berlebihan, biasanya tentang urusan orang lain.",
-      meta: {
-        views: "890",
-        likes: "89",
-        comments: "12",
-      },
-      tags: {
-        languages: ["Bahasa Indonesia"],
-        generations: ["Generasi Z"],
-      },
-      user: {
-        username: "sinta",
-        generation: "Milenial",
-      },
-    },
-  ];
+export default async function DailyWordsSection() {
+  const dailyWords = await getDailyWords(6);
+
   return (
     <section>
       <div className="mb-6 flex items-center justify-between">
@@ -79,7 +21,7 @@ export default function DailyWordsSlot() {
           Kata-kata Hari Ini
         </h3>
         <Link
-          href="/words"
+          href="/words?sort=top-voted"
           className="font-medium text-primary hover:text-primary/80"
         >
           Lihat Semua
@@ -87,78 +29,120 @@ export default function DailyWordsSlot() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {data.map((word) => (
+        {dailyWords.map((word) => (
           <WordCard key={word.id} word={word} />
+          // <SubtleWordCard key={word.id} word={word} />
         ))}
       </div>
+
+      {dailyWords.length === 0 && (
+        <div className="py-12 text-center text-muted-foreground">
+          <StarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/50" />
+          <h4 className="mb-2 text-lg font-medium">Belum ada kata hari ini</h4>
+          <p className="text-sm">
+            Jadilah yang pertama berkontribusi dengan menambahkan penjelasan
+            kata!
+          </p>
+          <Link
+            href="/contribute"
+            className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+          >
+            Mulai Berkontribusi
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
 
-const WordCard = ({ word }: { word: DailyWords }) => {
+// Word Card Component
+const WordCard = ({
+  word,
+}: {
+  word: Awaited<ReturnType<typeof getDailyWords>>[0];
+}) => {
   return (
     <Link
-      className="rounded-xl border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
-      href={`/words/${word.slug}`}
+      href={`/word/${word.slug}`}
+      className="group relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+      aria-label={`Lihat detail kata ${word.term} yang memiliki ${word.totalExplanations} penjelasan`}
+      role="article"
     >
-      <div className="mb-3 flex items-start justify-between">
-        <h4 className="font-mono text-xl font-semibold text-primary">
-          {word.title}
-        </h4>
-        <span className="flex items-center gap-1 text-sm text-muted-foreground">
-          <EyeIcon className="h-4 w-4" />
-          {word.meta.views}
-        </span>
-      </div>
-      <p className="mb-4 text-foreground">{word.description}</p>
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-      {/* Generation and Language Tags */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {word.tags.generations.map((generation) => (
-          <span
-            key={generation}
-            className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700"
-          >
-            {generation}
-          </span>
-        ))}
-        {word.tags.languages.map((language) => (
-          <span
-            key={language}
-            className="rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
-          >
-            {language}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/placeholder/potrait-placeholder.png"
-            alt="@daud"
-            width={24}
-            height={24}
-            className="rounded-full"
-          />
-          <div>
-            <span className="text-sm font-medium">@{word.user.username}</span>
-            <div className="flex items-center gap-1">
-              <span className="rounded bg-blue-100 px-1 py-0.5 text-xs text-blue-700">
-                {word.user.generation}
-              </span>
-            </div>
+      <div className="relative">
+        {/* Header */}
+        <div className="mb-3 flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <h4 className="font-mono text-xl font-semibold text-primary transition-colors group-hover:text-primary/90">
+              {word.term}
+            </h4>
+            <ArrowUpRightIcon className="h-4 w-4 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
           </div>
+          <span className="flex items-center gap-1 text-sm text-muted-foreground transition-colors group-hover:text-foreground">
+            <EyeIcon className="h-4 w-4 transition-transform group-hover:scale-110" />
+            {word.totalViews.toLocaleString()}
+          </span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1 text-secondary">
-            <ThumbsUpIcon className="h-4 w-4" />
-            {word.meta.likes}
-          </span>
-          <span className="flex items-center gap-1 text-muted-foreground">
-            <MessageCircleIcon className="h-4 w-4" />
-            {word.meta.comments}
-          </span>
+
+        {/* Content dengan micro-animations */}
+        <p
+          className="mb-4 line-clamp-2 text-foreground transition-colors group-hover:text-foreground/90"
+          title={word.topExplanation?.content}
+        >
+          {word.topExplanation?.content ||
+            "Belum ada penjelasan terbaik untuk kata ini."}
+        </p>
+
+        {/* Tags dengan scale effect */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {word.generations.slice(0, 2).map((generation, index: number) => (
+            <span
+              key={index}
+              className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 transition-all duration-200 group-hover:scale-105"
+            >
+              {generation.name}
+            </span>
+          ))}
+          {word.languages.slice(0, 2).map((language, index: number) => (
+            <span
+              key={index}
+              className="rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition-all duration-200 group-hover:scale-105 group-hover:bg-primary/20"
+            >
+              {language.flag} {language.name}
+            </span>
+          ))}
+        </div>
+
+        {/* Footer dengan enhanced interactions */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Image
+                src="/placeholder/potrait-placeholder.png"
+                alt={`@${word.topExplanation?.author.username || "anonymous"}`}
+                width={24}
+                height={24}
+                className="rounded-full transition-transform duration-200 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 rounded-full opacity-0 ring-2 ring-primary/20 transition-all duration-200 group-hover:opacity-100" />
+            </div>
+            <span className="text-sm font-medium transition-colors group-hover:text-primary">
+              @{word.topExplanation?.author.username || "anonymous"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1 text-secondary transition-all duration-200 group-hover:scale-105">
+              <ThumbsUpIcon className="h-4 w-4 transition-transform group-hover:scale-110" />
+              {word.topExplanation?.votes || 0}
+            </span>
+            <span className="flex items-center gap-1 text-muted-foreground transition-all duration-200 group-hover:scale-105 group-hover:text-foreground">
+              <MessageCircleIcon className="h-4 w-4 transition-transform group-hover:scale-110" />
+              {word.totalExplanations}
+            </span>
+          </div>
         </div>
       </div>
     </Link>

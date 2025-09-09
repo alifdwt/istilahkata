@@ -15,6 +15,13 @@
       "when": 1756998197176,
       "tag": "0001_salty_unus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757317856305,
+      "tag": "0002_amused_namora",
+      "breakpoints": true
     }
   ]
 }

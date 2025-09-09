@@ -1,0 +1,1 @@
+ALTER TABLE "languages" ADD COLUMN "color_class" varchar(50) NOT NULL;

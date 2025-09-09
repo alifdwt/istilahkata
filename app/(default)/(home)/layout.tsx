@@ -38,7 +38,7 @@ export default function HomeLayout({
           {contributions}
         </div>
 
-        <div className="space-y-6 lg:col-span-1">
+        <aside className="space-y-6 lg:col-span-1">
           {leaderboard}
           {activities}
           {/* Quick Actions */}
@@ -59,7 +59,7 @@ export default function HomeLayout({
             <div className="absolute top-0 right-0 -mt-2 -mr-2 h-16 w-16 rounded-full bg-primary-foreground/10" />
             <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-12 w-12 rounded-full bg-primary-foreground/5" />
           </section>
-        </div>
+        </aside>
       </div>
     </div>
   );
