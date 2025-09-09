@@ -47,7 +47,7 @@ const GenerationCard = ({
   const { generation, stats, topWords, trendingTag } = highlight;
 
   return (
-    <div className="group rounded-lg border bg-white p-4 transition-all hover:border-primary hover:shadow-md">
+    <div className="group rounded-lg border bg-card p-4 transition-all hover:border-primary hover:shadow-md">
       {/* Header with generation name and icon */}
       <Link
         href={`/generation/${generation.code}`}

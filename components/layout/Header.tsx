@@ -1,4 +1,5 @@
 import { Search, Menu, User, LogOut } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,8 +20,13 @@ export default async function Header() {
       <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Link href="/" className="font-mono text-2xl font-bold text-primary">
-            IstilahKata
+          <Link href="/">
+            <Image
+              src={"/istilah-kata-logo.png"}
+              alt="IstilahKata Logo"
+              width={110}
+              height={24}
+            />
           </Link>
           <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
             Beta
@@ -149,13 +155,13 @@ export default async function Header() {
           ) : (
             <div className="flex items-center gap-2">
               <Link
-                href="/auth/signin"
+                href="/login"
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
                 Masuk
               </Link>
               <Link
-                href="/auth/signup"
+                href="/register"
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Daftar
