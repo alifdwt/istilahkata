@@ -1,4 +1,14 @@
-import { desc, eq, asc, sql, and, isNull, or, inArray } from "drizzle-orm";
+import {
+  desc,
+  eq,
+  asc,
+  sql,
+  and,
+  isNull,
+  or,
+  inArray,
+  count,
+} from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -103,6 +113,35 @@ export interface LeaderboardUser {
     name: string;
     colorClass: string;
   };
+}
+
+export interface GenerationHighlight {
+  generation: {
+    id: string;
+    code: string;
+    name: string;
+    shortName: string;
+    description: string | null;
+    colorClass: string;
+    iconClass: string | null;
+    startYear: number;
+    endYear: number | null;
+  };
+  stats: {
+    totalWords: number;
+    totalExplanations: number;
+    totalVotes: number;
+    activeUsers: number;
+  };
+  topWords: {
+    id: string;
+    term: string;
+    slug: string;
+    totalViews: number;
+    totalExplanations: number;
+  }[];
+  recentActivity: number; // Activity in last 7 days
+  trendingTag: string; // "Baru dan viral", "Paling aktif", "Timeless", etc.
 }
 
 // Daily Words - Top voted explanations (FIXED TypeScript errors)
@@ -213,6 +252,152 @@ export async function getDailyWords(limit: number = 6): Promise<DailyWord[]> {
   });
 
   return Array.from(wordsMap.values());
+}
+
+export async function getGenerationHighlights(
+  limit: number = 4
+): Promise<GenerationHighlight[]> {
+  // Get all active generations
+  const allGenerations = await db
+    .select()
+    .from(generations)
+    .where(eq(generations.isActive, true))
+    .orderBy(asc(generations.sortOrder));
+
+  if (allGenerations.length === 0) return [];
+
+  const generationIds = allGenerations.map((g) => g.id);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // Get stats for each generation
+  const generationStats = await db
+    .select({
+      generationId: wordGenerations.generationId,
+      totalWords: count(words.id),
+      totalExplanations: sql<number>`COALESCE(SUM(${words.totalExplanations}), 0)`,
+      totalVotes: sql<number>`COALESCE(SUM(${words.totalVotes}), 0)`,
+      recentActivity: sql<number>`COUNT(CASE WHEN ${
+        explanations.createdAt
+      } > ${sevenDaysAgo.toISOString()} THEN 1 END)`,
+    })
+    .from(wordGenerations)
+    .innerJoin(words, eq(wordGenerations.wordId, words.id))
+    .leftJoin(explanations, eq(explanations.wordId, words.id))
+    .where(
+      and(
+        inArray(wordGenerations.generationId, generationIds),
+        eq(wordGenerations.isPrimary, true),
+        eq(words.status, "approved")
+      )
+    )
+    .groupBy(wordGenerations.generationId);
+
+  // Get active users count per generation
+  const activeUsersPerGeneration = await db
+    .select({
+      generationId: wordGenerations.generationId,
+      activeUsers: sql<number>`COUNT(DISTINCT ${explanations.userId})`,
+    })
+    .from(wordGenerations)
+    .innerJoin(explanations, eq(wordGenerations.wordId, explanations.wordId))
+    .where(
+      and(
+        inArray(wordGenerations.generationId, generationIds),
+        eq(wordGenerations.isPrimary, true),
+        eq(explanations.isActive, true)
+      )
+    )
+    .groupBy(wordGenerations.generationId);
+
+  // Get top words for each generation
+  const topWordsPerGeneration = await db
+    .select({
+      generationId: wordGenerations.generationId,
+      wordId: words.id,
+      wordTerm: words.term,
+      wordSlug: words.slug,
+      wordViews: words.totalViews,
+      wordExplanations: words.totalExplanations,
+      wordVotes: words.totalVotes,
+    })
+    .from(wordGenerations)
+    .innerJoin(words, eq(wordGenerations.wordId, words.id))
+    .where(
+      and(
+        inArray(wordGenerations.generationId, generationIds),
+        eq(wordGenerations.isPrimary, true),
+        eq(words.status, "approved")
+      )
+    )
+    .orderBy(desc(words.totalVotes), desc(words.totalViews));
+
+  // Process data for each generation
+  const highlights: GenerationHighlight[] = allGenerations.map((generation) => {
+    const stats = generationStats.find((s) => s.generationId === generation.id);
+    const activeUsers = activeUsersPerGeneration.find(
+      (a) => a.generationId === generation.id
+    );
+
+    const topWords = topWordsPerGeneration
+      .filter((w) => w.generationId === generation.id)
+      .slice(0, 3) // Top 3 words per generation
+      .map((w) => ({
+        id: w.wordId,
+        term: w.wordTerm,
+        slug: w.wordSlug,
+        totalViews: w.wordViews ?? 0,
+        totalExplanations: w.wordExplanations ?? 0,
+      }));
+
+    // Determine trending tag based on generation characteristics
+    const getTrendingTag = (gen: typeof generation, recentActivity: number) => {
+      if (gen.code === "gen-alpha") return "Baru dan viral";
+      if (gen.code === "gen-z") return "Paling aktif";
+      if (gen.code === "milenial") return "Workplace humor";
+      if (gen.code === "gen-x") return "Classic vibes";
+      if (gen.code === "lintas-generasi") return "Timeless";
+
+      // Dynamic based on activity
+      if (recentActivity > 10) return "Trending";
+      if (recentActivity > 5) return "Aktif";
+      return "Stabil";
+    };
+
+    return {
+      generation: {
+        id: generation.id,
+        code: generation.code,
+        name: generation.name,
+        shortName: generation.shortName,
+        description: generation.description,
+        colorClass: generation.colorClass,
+        iconClass: generation.iconClass,
+        startYear: generation.startYear,
+        endYear: generation.endYear,
+      },
+      stats: {
+        totalWords: stats?.totalWords ?? 0,
+        totalExplanations: stats?.totalExplanations ?? 0,
+        totalVotes: stats?.totalVotes ?? 0,
+        activeUsers: activeUsers?.activeUsers ?? 0,
+      },
+      topWords,
+      recentActivity: stats?.recentActivity ?? 0,
+      trendingTag: getTrendingTag(generation, stats?.recentActivity ?? 0),
+    };
+  });
+
+  // Sort by activity and relevance, take top ones
+  return highlights
+    .sort((a, b) => {
+      // Prioritize generations with more activity and words
+      const scoreA =
+        a.stats.totalWords * 2 + a.recentActivity * 5 + a.stats.totalVotes;
+      const scoreB =
+        b.stats.totalWords * 2 + b.recentActivity * 5 + b.stats.totalVotes;
+      return scoreB - scoreA;
+    })
+    .slice(0, limit);
 }
 
 // Trending Words - Fixed TypeScript errors

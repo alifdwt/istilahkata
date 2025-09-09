@@ -350,6 +350,83 @@ async function main() {
         totalVotes: 178,
         status: "approved" as const,
       },
+      // Gen Alpha specific words
+      {
+        term: "ohio",
+        slug: "ohio",
+        context: "This place is so ohio, everything is weird and chaotic here.",
+        requestedBy: userMap.rani.id,
+        totalViews: 432,
+        totalExplanations: 1,
+        totalVotes: 28,
+        status: "approved" as const,
+      },
+      {
+        term: "gyatt",
+        slug: "gyatt",
+        context: "Gyatt! That car is absolutely insane looking!",
+        requestedBy: userMap.david.id,
+        totalViews: 298,
+        totalExplanations: 1,
+        totalVotes: 15,
+        status: "approved" as const,
+      },
+
+      // Milenial specific words
+      {
+        term: "galau",
+        slug: "galau",
+        context: "Gw lagi galau nih mikirin masa depan, bingung mau ngapain.",
+        requestedBy: userMap.daud.id,
+        totalViews: 756,
+        totalExplanations: 2,
+        totalVotes: 45,
+        status: "approved" as const,
+      },
+      {
+        term: "lebay",
+        slug: "lebay",
+        context: "Lu lebay banget deh, masa gitu aja sampai drama segala.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 634,
+        totalExplanations: 1,
+        totalVotes: 38,
+        status: "approved" as const,
+      },
+
+      // Gen X words
+      {
+        term: "mantap",
+        slug: "mantap",
+        context: "Mantap jiwa! Pertunjukan tadi malam benar-benar luar biasa.",
+        requestedBy: userMap.admin.id,
+        totalViews: 892,
+        totalExplanations: 1,
+        totalVotes: 52,
+        status: "approved" as const,
+      },
+
+      // Cross-generational words
+      {
+        term: "keren",
+        slug: "keren",
+        context: "Wah keren banget motornya, pasti mahal tuh.",
+        requestedBy: userMap.daud.id,
+        totalViews: 1124,
+        totalExplanations: 2,
+        totalVotes: 67,
+        status: "approved" as const,
+      },
+      {
+        term: "oke",
+        slug: "oke",
+        context: "Oke deh, gw setuju sama rencana lu.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 445,
+        totalExplanations: 1,
+        totalVotes: 23,
+        status: "approved" as const,
+      },
     ];
 
     const insertedWords = await db.insert(words).values(wordsData).returning();
@@ -488,6 +565,55 @@ async function main() {
       {
         wordId: wordMap.bucin.id,
         generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      // Gen Alpha words
+      {
+        wordId: wordMap.ohio.id,
+        generationId: generationMap["gen-alpha"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      {
+        wordId: wordMap.gyatt.id,
+        generationId: generationMap["gen-alpha"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+
+      // Milenial words
+      {
+        wordId: wordMap.galau.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.lebay.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: true,
+        confidence: 0.85,
+      },
+
+      // Gen X words
+      {
+        wordId: wordMap.mantap.id,
+        generationId: generationMap["gen-x"].id,
+        isPrimary: true,
+        confidence: 0.8,
+      },
+
+      // Cross-generational
+      {
+        wordId: wordMap.keren.id,
+        generationId: generationMap["lintas-generasi"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.oke.id,
+        generationId: generationMap["lintas-generasi"].id,
         isPrimary: true,
         confidence: 0.95,
       },

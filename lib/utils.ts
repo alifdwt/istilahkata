@@ -126,3 +126,20 @@ export function hasPermission(
 
   return userLevel >= requiredLevel;
 }
+
+export function getGenerationIcon(iconClass: string | null) {
+  switch (iconClass) {
+    case "sparkles":
+      return "✨";
+    case "smartphone":
+      return "📱";
+    case "laptop":
+      return "💻";
+    case "music":
+      return "🎵";
+    case "users":
+      return "👥";
+    default:
+      return "🔖";
+  }
+}
