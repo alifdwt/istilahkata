@@ -35,7 +35,7 @@ export default async function LoginPage() {
           Belum punya akun?{" "}
           <Link
             href="/register"
-            className="hover:text-brand underline underline-offset-4"
+            className="underline underline-offset-4 hover:text-primary"
           >
             Daftar di sini
           </Link>

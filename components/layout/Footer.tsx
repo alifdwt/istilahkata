@@ -1,12 +1,20 @@
+import Image from "next/image";
 import React from "react";
 
 const Footer = () => {
   return (
     <footer className="mt-16 bg-muted py-8">
       <div className="mx-auto max-w-screen-2xl px-4 text-center">
-        <h3 className="mb-2 font-mono text-xl font-bold text-primary">
+        {/* <h3 className="mb-2 font-mono text-xl font-bold text-primary">
           IstilahKata
-        </h3>
+        </h3> */}
+        <Image
+          src="/istilah-kata-logo.png"
+          alt="IstilahKata"
+          width={150}
+          height={100}
+          className="mx-auto mb-4"
+        />
         <p className="mb-4 text-sm text-muted-foreground">
           Platform kolaboratif untuk memahami bahasa gaul dari semua generasi
         </p>

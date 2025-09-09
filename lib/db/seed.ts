@@ -1,834 +1,757 @@
-import { eq } from "drizzle-orm";
+import { config } from "dotenv";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 import {
   users,
-  words,
-  explanations,
-  wordGenerations,
-  wordLanguages,
   generations,
   languages,
+  words,
+  explanations,
+  votes,
+  comments,
+  wordGenerations,
+  wordLanguages,
+  wordViews,
 } from "./schema";
 
-import { db } from "./index";
+// Load environment variables for script
+config({ path: ".env.local" });
 
-async function seed() {
-  console.log("🌱 Seeding database...");
+// Validate required environment variables
+const requiredEnvVars = {
+  DATABASE_URL: process.env.DATABASE_URL!,
+};
 
-  try {
-    // Create reference data first
-    console.log("📚 Creating reference tables...");
-
-    // Create generations
-    const sampleGenerations = await db
-      .insert(generations)
-      .values([
-        {
-          code: "gen-alpha",
-          name: "Generasi Alpha",
-          shortName: "Gen Alpha",
-          description:
-            "Digital natives yang lahir di era TikTok, AI, dan teknologi imersif. Generasi pertama yang benar-benar tumbuh dengan tablet dan smartphone.",
-          startYear: 2010,
-          endYear: 2025,
-          colorClass: "bg-purple-100 text-purple-700",
-          iconClass: "sparkles",
-          sortOrder: 1,
-        },
-        {
-          code: "gen-z",
-          name: "Generasi Z",
-          shortName: "Gen Z",
-          description:
-            "Social media natives yang tumbuh dengan meme culture, YouTube, dan Instagram. Pelopor bahasa gaul digital.",
-          startYear: 1997,
-          endYear: 2012,
-          colorClass: "bg-blue-100 text-blue-700",
-          iconClass: "smartphone",
-          sortOrder: 2,
-        },
-        {
-          code: "millennial",
-          name: "Generasi Milenial",
-          shortName: "Milenial",
-          description:
-            "Internet pioneers yang mengalami transisi dari analog ke digital. Menciptakan budaya workplace humor dan coffee culture.",
-          startYear: 1981,
-          endYear: 1996,
-          colorClass: "bg-green-100 text-green-700",
-          iconClass: "coffee",
-          sortOrder: 3,
-        },
-        {
-          code: "gen-x",
-          name: "Generasi X",
-          shortName: "Gen X",
-          description:
-            "MTV generation yang tumbuh dengan grunge culture dan awal era internet. Sandwich generation antara Boomer dan Milenial.",
-          startYear: 1965,
-          endYear: 1980,
-          colorClass: "bg-orange-100 text-orange-700",
-          iconClass: "music",
-          sortOrder: 4,
-        },
-        {
-          code: "cross-gen",
-          name: "Lintas Generasi",
-          shortName: "Universal",
-          description:
-            "Kata-kata yang digunakan dan dipahami oleh semua generasi. Biasanya sudah menjadi bagian dari bahasa sehari-hari.",
-          startYear: 1960,
-          endYear: 2025,
-          colorClass: "bg-gray-100 text-gray-700",
-          iconClass: "users",
-          sortOrder: 5,
-        },
-      ])
-      .returning();
-
-    console.log("✅ Generations created");
-
-    // Create languages
-    const sampleLanguages = await db
-      .insert(languages)
-      .values([
-        {
-          code: "indonesian",
-          name: "Bahasa Indonesia",
-          nativeName: "Bahasa Indonesia",
-          description:
-            "Bahasa resmi Republik Indonesia yang menjadi lingua franca untuk komunikasi nasional.",
-          colorClass: "bg-red-100 text-red-700",
-          flag: "🇮🇩",
-          sortOrder: 1,
-        },
-        {
-          code: "english",
-          name: "Bahasa Inggris",
-          nativeName: "English",
-          description:
-            "Bahasa internasional yang banyak diadopsi dalam bahasa gaul Indonesia, terutama di era digital.",
-          colorClass: "bg-blue-100 text-blue-700",
-          flag: "🇺🇸",
-          sortOrder: 2,
-        },
-        {
-          code: "javanese",
-          name: "Bahasa Jawa",
-          nativeName: "Basa Jawa",
-          description:
-            "Bahasa daerah terbesar di Indonesia yang memberikan banyak kontribusi kata ke bahasa gaul nasional.",
-          colorClass: "bg-amber-100 text-amber-700",
-          flag: "🏛️",
-          sortOrder: 3,
-        },
-        {
-          code: "sundanese",
-          name: "Bahasa Sunda",
-          nativeName: "Basa Sunda",
-          description:
-            "Bahasa daerah dari Jawa Barat yang turut memperkaya khasanah bahasa gaul Indonesia.",
-          colorClass: "bg-emerald-100 text-emerald-700",
-          flag: "🌾",
-          sortOrder: 4,
-        },
-        {
-          code: "betawi",
-          name: "Bahasa Betawi",
-          nativeName: "Basa Betawi",
-          description:
-            "Bahasa asli Jakarta yang menjadi sumber banyak kata gaul di Indonesia, terutama di era 80-90an.",
-          colorClass: "bg-orange-100 text-orange-700",
-          flag: "🏙️",
-          sortOrder: 5,
-        },
-        {
-          code: "hokkien",
-          name: "Bahasa Hokkien",
-          nativeName: "閩南語",
-          description:
-            "Dialek Tionghoa yang berkontribusi pada beberapa kata dalam bahasa gaul Indonesia.",
-          colorClass: "bg-pink-100 text-pink-700",
-          flag: "🏮",
-          sortOrder: 6,
-        },
-        {
-          code: "mixed",
-          name: "Campuran",
-          nativeName: "Mixed Languages",
-          description:
-            "Kata-kata yang merupakan hasil pencampuran dari berbagai bahasa atau tidak dapat dikategorikan secara spesifik.",
-          colorClass: "bg-purple-100 text-purple-700",
-          flag: "🌈",
-          sortOrder: 7,
-        },
-      ])
-      .returning();
-
-    console.log("✅ Languages created");
-
-    // Create sample users
-    const sampleUsers = await db
-      .insert(users)
-      .values([
-        {
-          username: "david",
-          email: "david@example.com",
-          displayName: "David Pratama",
-          bio: "Gen Z enthusiast yang suka ngikutin trend bahasa gaul terbaru dari TikTok dan Twitter",
-          role: "user",
-        },
-        {
-          username: "daud",
-          email: "daud@example.com",
-          displayName: "Daud Wijaya",
-          bio: "Millennial dengan pengalaman corporate, paham seluk beluk bahasa kantor dan workplace humor",
-          role: "moderator",
-        },
-        {
-          username: "sinta",
-          email: "sinta@example.com",
-          displayName: "Sinta Maharani",
-          bio: "Language enthusiast dari Gen Z, senang explore bahasa daerah dan etimologi kata",
-          role: "user",
-        },
-        {
-          username: "rani",
-          email: "rani@example.com",
-          displayName: "Rani Susanti",
-          bio: "Gen Alpha yang aktif di social media, sering pakai bahasa gaul terbaru dari platform digital",
-          role: "user",
-        },
-        {
-          username: "budi",
-          email: "budi@example.com",
-          displayName: "Budi Santoso",
-          bio: "Gen X yang mulai belajar bahasa gaul dari anak-anak, kadang bingung tapi antusias",
-          role: "user",
-        },
-        {
-          username: "maya",
-          email: "maya@example.com",
-          displayName: "Maya Sari",
-          bio: "Linguist millennial yang peneliti bahasa gaul Jakarta dan sekitarnya",
-          role: "moderator",
-        },
-      ])
-      .returning();
-
-    console.log("✅ Users created");
-
-    // Create sample words with realistic contexts
-    const sampleWords = await db
-      .insert(words)
-      .values([
-        {
-          term: "gabut",
-          slug: "gabut",
-          context:
-            "Duh gabut banget hari ini, gak ada kerjaan di kantor, mau ngapain ya?",
-          requestedBy: sampleUsers[0].id, // david
-          status: "approved",
-          totalExplanations: 3,
-          totalViews: 1256,
-          totalVotes: 47,
-        },
-        {
-          term: "skuy",
-          slug: "skuy",
-          context: "Skuy makan di warteg depan kampus, lagi promo nih!",
-          requestedBy: sampleUsers[1].id, // daud
-          status: "approved",
-          totalExplanations: 2,
-          totalViews: 890,
-          totalVotes: 35,
-        },
-        {
-          term: "kepo",
-          slug: "kepo",
-          context:
-            "Jangan kepo deh sama urusan orang lain, fokus sama hidup kamu aja",
-          requestedBy: sampleUsers[2].id, // sinta
-          status: "approved",
-          totalExplanations: 3,
-          totalViews: 2340,
-          totalVotes: 89,
-        },
-        {
-          term: "baper",
-          slug: "baper",
-          context: "Gue baper banget liat film tadi, sampe nangis di bioskop",
-          requestedBy: sampleUsers[3].id, // rani
-          status: "approved",
-          totalExplanations: 2,
-          totalViews: 678,
-          totalVotes: 28,
-        },
-        {
-          term: "fomo",
-          slug: "fomo",
-          context:
-            "Aku fomo banget liat temen-temen pada liburan ke Bali, pengen ikut juga",
-          requestedBy: sampleUsers[0].id, // david
-          status: "pending",
-          totalExplanations: 1,
-          totalViews: 123,
-          totalVotes: 5,
-        },
-        {
-          term: "vibes",
-          slug: "vibes",
-          context:
-            "Vibes cafe ini enak banget buat nongkrong sambil ngerjain tugas",
-          requestedBy: sampleUsers[2].id, // sinta
-          status: "approved",
-          totalExplanations: 3,
-          totalViews: 456,
-          totalVotes: 22,
-        },
-        {
-          term: "anjay",
-          slug: "anjay",
-          context: "Anjay, nilai ujianku bagus banget! Gak nyangka bisa segini",
-          requestedBy: sampleUsers[4].id, // budi
-          status: "approved",
-          totalExplanations: 2,
-          totalViews: 1789,
-          totalVotes: 156,
-        },
-        {
-          term: "bestie",
-          slug: "bestie",
-          context:
-            "Bestie, kamu udah denger gossip terbaru belum? Cerita dong!",
-          requestedBy: sampleUsers[3].id, // rani
-          status: "approved",
-          totalExplanations: 1,
-          totalViews: 234,
-          totalVotes: 12,
-        },
-      ])
-      .returning();
-
-    console.log("✅ Words created");
-
-    // Map generation codes to IDs for easier reference
-    const genMap = {
-      "gen-alpha": sampleGenerations.find((g) => g.code === "gen-alpha")!.id,
-      "gen-z": sampleGenerations.find((g) => g.code === "gen-z")!.id,
-      millennial: sampleGenerations.find((g) => g.code === "millennial")!.id,
-      "gen-x": sampleGenerations.find((g) => g.code === "gen-x")!.id,
-      "cross-gen": sampleGenerations.find((g) => g.code === "cross-gen")!.id,
-    };
-
-    // Map language codes to IDs
-    const langMap = {
-      indonesian: sampleLanguages.find((l) => l.code === "indonesian")!.id,
-      english: sampleLanguages.find((l) => l.code === "english")!.id,
-      javanese: sampleLanguages.find((l) => l.code === "javanese")!.id,
-      betawi: sampleLanguages.find((l) => l.code === "betawi")!.id,
-      hokkien: sampleLanguages.find((l) => l.code === "hokkien")!.id,
-      mixed: sampleLanguages.find((l) => l.code === "mixed")!.id,
-    };
-
-    // Add generation tags
-    await db.insert(wordGenerations).values([
-      // gabut
-      {
-        wordId: sampleWords[0].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2018,
-        confidence: 0.9,
-      },
-      {
-        wordId: sampleWords[0].id,
-        generationId: genMap["millennial"],
-        isPrimary: false,
-        startYear: 2020,
-        confidence: 0.7,
-      },
-
-      // skuy
-      {
-        wordId: sampleWords[1].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2019,
-        confidence: 0.95,
-      },
-
-      // kepo
-      {
-        wordId: sampleWords[2].id,
-        generationId: genMap["cross-gen"],
-        isPrimary: true,
-        startYear: 2015,
-        confidence: 0.8,
-      },
-
-      // baper
-      {
-        wordId: sampleWords[3].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2017,
-        confidence: 0.85,
-      },
-      {
-        wordId: sampleWords[3].id,
-        generationId: genMap["gen-alpha"],
-        isPrimary: false,
-        startYear: 2022,
-        confidence: 0.6,
-      },
-
-      // fomo
-      {
-        wordId: sampleWords[4].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2020,
-        confidence: 0.9,
-      },
-      {
-        wordId: sampleWords[4].id,
-        generationId: genMap["millennial"],
-        isPrimary: false,
-        startYear: 2021,
-        confidence: 0.7,
-      },
-
-      // vibes
-      {
-        wordId: sampleWords[5].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2020,
-        confidence: 0.9,
-      },
-      {
-        wordId: sampleWords[5].id,
-        generationId: genMap["gen-alpha"],
-        isPrimary: false,
-        startYear: 2023,
-        confidence: 0.8,
-      },
-
-      // anjay
-      {
-        wordId: sampleWords[6].id,
-        generationId: genMap["gen-z"],
-        isPrimary: true,
-        startYear: 2016,
-        confidence: 0.95,
-      },
-      {
-        wordId: sampleWords[6].id,
-        generationId: genMap["millennial"],
-        isPrimary: false,
-        startYear: 2018,
-        confidence: 0.6,
-      },
-
-      // bestie
-      {
-        wordId: sampleWords[7].id,
-        generationId: genMap["gen-alpha"],
-        isPrimary: true,
-        startYear: 2021,
-        confidence: 0.9,
-      },
-      {
-        wordId: sampleWords[7].id,
-        generationId: genMap["gen-z"],
-        isPrimary: false,
-        startYear: 2020,
-        confidence: 0.8,
-      },
-    ]);
-
-    // Add language tags
-    await db.insert(wordLanguages).values([
-      // gabut - Indonesian
-      {
-        wordId: sampleWords[0].id,
-        languageId: langMap["indonesian"],
-        isPrimary: true,
-      },
-
-      // skuy - Indonesian
-      {
-        wordId: sampleWords[1].id,
-        languageId: langMap["indonesian"],
-        isPrimary: true,
-      },
-
-      // kepo - Hokkien origin, adopted into Indonesian
-      {
-        wordId: sampleWords[2].id,
-        languageId: langMap["hokkien"],
-        isPrimary: true,
-      },
-      {
-        wordId: sampleWords[2].id,
-        languageId: langMap["indonesian"],
-        isPrimary: false,
-      },
-
-      // baper - Indonesian
-      {
-        wordId: sampleWords[3].id,
-        languageId: langMap["indonesian"],
-        isPrimary: true,
-      },
-
-      // fomo - English adopted
-      {
-        wordId: sampleWords[4].id,
-        languageId: langMap["english"],
-        isPrimary: true,
-      },
-
-      // vibes - English adopted
-      {
-        wordId: sampleWords[5].id,
-        languageId: langMap["english"],
-        isPrimary: true,
-      },
-
-      // anjay - Betawi/Indonesian
-      {
-        wordId: sampleWords[6].id,
-        languageId: langMap["betawi"],
-        isPrimary: true,
-      },
-      {
-        wordId: sampleWords[6].id,
-        languageId: langMap["indonesian"],
-        isPrimary: false,
-      },
-
-      // bestie - English adopted
-      {
-        wordId: sampleWords[7].id,
-        languageId: langMap["english"],
-        isPrimary: true,
-      },
-    ]);
-
-    console.log("✅ Generation and language tags created");
-
-    // Create sample explanations
-    await db.insert(explanations).values([
-      // Explanations for "gabut"
-      {
-        wordId: sampleWords[0].id,
-        userId: sampleUsers[1].id, // daud
-        content:
-          'Gabut sebagai akronim dari "gaji buta". Ini adalah arti yang paling umum dan sering digunakan. Awalnya, kata ini digunakan di lingkungan kerja untuk menggambarkan kondisi di mana seseorang tidak memiliki pekerjaan atau tugas yang harus dikerjakan, tetapi tetap dibayar. Jadi, mereka seperti mendapat gaji tanpa melakukan apa pun, atau "gaji buta".',
-        example:
-          "Hari ini aku gabut banget di kantor, bos lagi meeting seharian.",
-        votes: 25,
-        wordCount: 120,
-        isAccepted: true,
-        isFeatured: true,
-      },
-      {
-        wordId: sampleWords[0].id,
-        userId: sampleUsers[2].id, // sinta
-        content:
-          "Gabut untuk menggambarkan perasaan bosan atau tidak ada kegiatan. Gabut bisa digunakan untuk mengekspresikan perasaan bosan, jenuh, atau lelah karena tidak ada kegiatan yang berarti. Kata ini sering digunakan saat seseorang sedang sendirian dan tidak tahu harus melakukan apa.",
-        example: "Aku gabut banget hari ini, enaknya ngapain ya?",
-        votes: 18,
-        wordCount: 85,
-        isAccepted: true,
-      },
-      {
-        wordId: sampleWords[0].id,
-        userId: sampleUsers[4].id, // budi
-        content:
-          "Gabut juga bisa digunakan untuk merujuk pada perasaan malas atau enggan melakukan sesuatu. Ini seperti perasaan yang membuat seseorang hanya ingin bersantai atau bermalas-malasan meskipun ada tugas yang menunggu.",
-        example: "Tugasku numpuk, tapi aku lagi gabut banget buat mulai.",
-        votes: 4,
-        wordCount: 75,
-        isAccepted: false,
-      },
-
-      // Explanations for "skuy"
-      {
-        wordId: sampleWords[1].id,
-        userId: sampleUsers[0].id, // david
-        content:
-          'Skuy adalah singkatan dari "ayo" atau ajakan dalam bahasa gaul. Kata ini sering digunakan sebagai ajakan untuk melakukan sesuatu bersama-sama, biasanya digunakan oleh anak muda untuk mengajak teman mereka melakukan aktivitas tertentu dengan cara yang lebih kekinian dan energik.',
-        example: "Skuy makan di warteg, lagi laper nih!",
-        votes: 21,
-        wordCount: 65,
-        isAccepted: true,
-        isFeatured: true,
-      },
-      {
-        wordId: sampleWords[1].id,
-        userId: sampleUsers[3].id, // rani
-        content:
-          'Skuy berasal dari adaptasi kata "let\'s go" dalam bahasa Inggris yang kemudian diserap dan dimodifikasi menjadi kata yang mudah diucapkan dalam konteks bahasa gaul Indonesia. Populer di kalangan Gen Z sebagai pengganti kata "ayo" yang terasa lebih formal.',
-        example: "Skuy main game online bareng, udah pada ready belum?",
-        votes: 14,
-        wordCount: 55,
-        isAccepted: true,
-      },
-
-      // Explanations for "kepo"
-      {
-        wordId: sampleWords[2].id,
-        userId: sampleUsers[1].id, // daud
-        content:
-          'Kepo berasal dari bahasa Hokkien "kiasu" yang berarti "ingin tahu" atau "penasaran". Dalam konteks bahasa gaul Indonesia, kepo digunakan untuk menggambarkan seseorang yang terlalu ingin tahu tentang urusan orang lain, biasanya dengan konotasi negatif seperti tukang gosip atau orang yang suka ikut campur.',
-        example:
-          "Dia tuh orangnya kepo banget, selalu nanya-nanya kehidupan pribadi orang.",
-        votes: 45,
-        wordCount: 95,
-        isAccepted: true,
-        isFeatured: true,
-      },
-      {
-        wordId: sampleWords[2].id,
-        userId: sampleUsers[2].id, // sinta
-        content:
-          "Kepo juga bisa digunakan dalam konteks positif ketika seseorang menunjukkan rasa ingin tahu yang wajar atau antusiasme terhadap sesuatu. Tergantung pada konteks dan cara penyampaiannya, kepo tidak selalu bermakna negatif.",
-        example:
-          "Maaf ya aku kepo, tapi kamu beli tas itu dimana? Bagus banget!",
-        votes: 32,
-        wordCount: 65,
-        isAccepted: true,
-      },
-      {
-        wordId: sampleWords[2].id,
-        userId: sampleUsers[5].id, // maya
-        content:
-          "Dari perspektif linguistik, kata kepo menunjukkan bagaimana bahasa daerah dan etnis Tionghoa terintegrasi dalam bahasa gaul nasional Indonesia. Proses adopsi ini mencerminkan dinamika multikultural dalam pembentukan identitas bahasa generasi muda.",
-        example:
-          "Penelitian menunjukkan kata kepo sudah diterima lintas etnis di Indonesia.",
-        votes: 12,
-        wordCount: 85,
-        isAccepted: true,
-      },
-
-      // Explanation for "baper"
-      {
-        wordId: sampleWords[3].id,
-        userId: sampleUsers[0].id, // david
-        content:
-          'Baper adalah singkatan dari "bawa perasaan". Kata ini digunakan untuk menggambarkan kondisi dimana seseorang terlalu larut dalam emosi atau perasaan, biasanya setelah menonton film, mendengar lagu, atau mengalami situasi tertentu yang menyentuh hati dan membuat perasaan menjadi sensitif.',
-        example:
-          "Habis nonton drama Korea, aku jadi baper sendiri, pengen punya pacar kayak main character-nya.",
-        votes: 19,
-        wordCount: 80,
-        isAccepted: true,
-      },
-      {
-        wordId: sampleWords[3].id,
-        userId: sampleUsers[3].id, // rani
-        content:
-          "Baper juga sering dipakai untuk menggambarkan reaksi berlebihan terhadap candaan atau komentar yang sebenarnya tidak dimaksudkan serius. Dalam konteks ini, baper menunjukkan seseorang yang terlalu sensitive atau mudah tersinggung.",
-        example: "Santai aja, jangan baper dong! Itu kan cuma becanda.",
-        votes: 8,
-        wordCount: 60,
-        isAccepted: true,
-      },
-
-      // Explanation for "fomo"
-      {
-        wordId: sampleWords[4].id,
-        userId: sampleUsers[2].id, // sinta
-        content:
-          'FOMO adalah singkatan dari "Fear of Missing Out" - rasa takut ketinggalan atau melewatkan sesuatu. Biasanya muncul saat melihat orang lain melakukan aktivitas menarik di media sosial, membuat kita merasa perlu ikut atau menyesal tidak berpartisipasi.',
-        example:
-          "Liat Instagram story temen-temen yang lagi liburan, jadi fomo pengen ikut traveling juga.",
-        votes: 5,
-        wordCount: 70,
-        isAccepted: false,
-      },
-
-      // Explanations for "vibes"
-      {
-        wordId: sampleWords[5].id,
-        userId: sampleUsers[2].id, // sinta
-        content:
-          'Vibes berasal dari bahasa Inggris "vibrations" yang dalam bahasa gaul Indonesia digunakan untuk menggambarkan suasana, atmosfer, atau energi dari suatu tempat, situasi, atau orang. Biasanya digunakan untuk mendeskripsikan kesan atau perasaan yang ditimbulkan oleh lingkungan sekitar.',
-        example:
-          "Vibes cafe ini chill banget, cocok buat ngerjain tugas sambil dengerin musik.",
-        votes: 15,
-        wordCount: 75,
-        isAccepted: true,
-        isFeatured: true,
-      },
-      {
-        wordId: sampleWords[5].id,
-        userId: sampleUsers[3].id, // rani
-        content:
-          "Vibes juga bisa digunakan untuk menggambarkan chemistry atau kecocokan antara dua orang atau lebih. Dalam konteks ini, vibes yang bagus berarti ada keharmonisan atau keselarasan dalam hubungan, percakapan, atau interaksi sosial.",
-        example: "Vibes kita cocok banget, kayaknya bisa jadi teman baik nih!",
-        votes: 7,
-        wordCount: 55,
-        isAccepted: true,
-      },
-      {
-        wordId: sampleWords[5].id,
-        userId: sampleUsers[0].id, // david
-        content:
-          "Di era social media, vibes sering dipakai untuk caption atau comment mengomentari aesthetic atau mood dari foto/video. Kata ini membantu mengekspresikan perasaan tentang konten visual dengan cara yang singkat tapi bermakna.",
-        example: "Vibes foto ini aesthetic banget! Filter apa yang kamu pakai?",
-        votes: 0,
-        wordCount: 50,
-        isAccepted: false,
-      },
-
-      // Explanations for "anjay"
-      {
-        wordId: sampleWords[6].id,
-        userId: sampleUsers[4].id, // budi
-        content:
-          "Anjay adalah kata seru yang digunakan untuk mengekspresikan berbagai emosi seperti kagum, terkejut, atau senang. Berasal dari bahasa Betawi dan populer di kalangan anak muda sebagai pengganti kata seru lainnya. Bisa dipakai dalam konteks positif maupun negatif tergantung intonasi.",
-        example: "Anjay, nilai ujianku bagus banget! Gak nyangka bisa dapat A.",
-        votes: 89,
-        wordCount: 85,
-        isAccepted: true,
-        isFeatured: true,
-      },
-      {
-        wordId: sampleWords[6].id,
-        userId: sampleUsers[5].id, // maya
-        content:
-          "Anjay menunjukkan evolusi bahasa daerah Jakarta yang kemudian menyebar ke seluruh Indonesia melalui media dan internet. Kata ini mencerminkan bagaimana bahasa lokal bisa menjadi fenomena nasional di era digital.",
-        example:
-          "Anjay, video TikTok kamu viral banget! Udah berapa juta views?",
-        votes: 67,
-        wordCount: 70,
-        isAccepted: true,
-      },
-
-      // Explanation for "bestie"
-      {
-        wordId: sampleWords[7].id,
-        userId: sampleUsers[3].id, // rani
-        content:
-          'Bestie adalah singkatan dari "best friend" dalam bahasa Inggris yang diadopsi ke dalam bahasa gaul Indonesia. Digunakan untuk memanggil atau merujuk kepada sahabat terdekat dengan cara yang lebih casual dan akrab. Populer di kalangan Gen Alpha dan Gen Z.',
-        example: "Bestie, kamu udah denger gossip terbaru belum? Cerita dong!",
-        votes: 12,
-        wordCount: 60,
-        isAccepted: true,
-      },
-    ]);
-
-    console.log("✅ Explanations created");
-
-    // Update user stats based on contributions
-    await db
-      .update(users)
-      .set({
-        totalVotes: 45,
-        totalWordCount: 200,
-      })
-      .where(eq(users.id, sampleUsers[1].id)); // daud
-
-    await db
-      .update(users)
-      .set({
-        totalVotes: 36,
-        totalWordCount: 140,
-      })
-      .where(eq(users.id, sampleUsers[0].id)); // david
-
-    await db
-      .update(users)
-      .set({
-        totalVotes: 47,
-        totalWordCount: 195,
-      })
-      .where(eq(users.id, sampleUsers[2].id)); // sinta
-
-    await db
-      .update(users)
-      .set({
-        totalVotes: 29,
-        totalWordCount: 115,
-      })
-      .where(eq(users.id, sampleUsers[3].id)); // rani
-
-    await db
-      .update(users)
-      .set({
-        totalVotes: 93,
-        totalWordCount: 155,
-      })
-      .where(eq(users.id, sampleUsers[4].id)); // budi
-
-    await db
-      .update(users)
-      .set({
-        totalVotes: 79,
-        totalWordCount: 155,
-      })
-      .where(eq(users.id, sampleUsers[5].id)); // maya
-
-    console.log("✅ User stats updated");
-    console.log("🎉 Database seeded successfully!");
-
-    // Print comprehensive summary
-    console.log("\n📊 Seed Summary:");
-    console.log(`- Users: ${sampleUsers.length}`);
-    console.log(`- Words: ${sampleWords.length}`);
-    console.log(`- Generations: ${sampleGenerations.length}`);
-    console.log(`- Languages: ${sampleLanguages.length}`);
-    console.log("- Explanations: 15");
-    console.log("- Generation tags: 13");
-    console.log("- Language tags: 10");
-
-    console.log("\n🎯 Reference Data Created:");
-    console.log("Generations:");
-    sampleGenerations.forEach((gen) => {
-      console.log(
-        `  - ${gen.name} (${gen.startYear}-${gen.endYear || "present"})`
-      );
-    });
-
-    console.log("\nLanguages:");
-    sampleLanguages.forEach((lang) => {
-      console.log(`  - ${lang.name} ${lang.flag}`);
-    });
-
-    console.log("\n🔥 Featured Words:");
-    const featuredWords = sampleWords.slice(0, 4);
-    featuredWords.forEach((word) => {
-      console.log(
-        `  - ${word.term}: ${word.totalViews} views, ${word.totalVotes} votes`
-      );
-    });
-
-    console.log("\n👥 Top Contributors:");
-    const contributors = [
-      { name: sampleUsers[4].displayName, votes: 93, words: 155 }, // budi
-      { name: sampleUsers[5].displayName, votes: 79, words: 155 }, // maya
-      { name: sampleUsers[2].displayName, votes: 47, words: 195 }, // sinta
-      { name: sampleUsers[1].displayName, votes: 45, words: 200 }, // daud
-    ];
-    contributors.forEach((user) => {
-      console.log(
-        `  - ${user.name}: ${user.votes} votes, ${user.words} word count`
-      );
-    });
-  } catch (error) {
-    console.error("❌ Seeding failed:", error);
-    throw error;
+for (const [key, value] of Object.entries(requiredEnvVars)) {
+  if (!value) {
+    console.error(`❌ Missing required environment variable: ${key}`);
+    console.error(`Please check your .env.local file`);
+    process.exit(1);
   }
 }
 
-seed()
+// Create database connection for seeding only
+const queryClient = postgres(requiredEnvVars.DATABASE_URL);
+const db = drizzle(queryClient, {
+  schema: {
+    users,
+    generations,
+    languages,
+    words,
+    explanations,
+    votes,
+    comments,
+    wordGenerations,
+    wordLanguages,
+    wordViews,
+  },
+});
+
+async function main() {
+  console.log("🌱 Starting database seeding...");
+  console.log(
+    `📍 Using database: ${requiredEnvVars.DATABASE_URL!.split("@")[1]}`
+  );
+
+  try {
+    // Test database connection first
+    console.log("🔍 Testing database connection...");
+    await db.execute("SELECT 1");
+    console.log("✅ Database connection successful");
+
+    // Clear existing data (for development only)
+    console.log("🗑️ Clearing existing data...");
+    await db.delete(wordViews);
+    await db.delete(comments);
+    await db.delete(votes);
+    await db.delete(wordLanguages);
+    await db.delete(wordGenerations);
+    await db.delete(explanations);
+    await db.delete(words);
+    await db.delete(users);
+    await db.delete(languages);
+    await db.delete(generations);
+
+    // Seed generations
+    console.log("👥 Seeding generations...");
+    const generationsData = [
+      {
+        code: "gen-alpha",
+        name: "Generasi Alpha",
+        shortName: "Gen Alpha",
+        description: "Generasi yang lahir setelah 2010, digital native sejati",
+        startYear: 2010,
+        endYear: 2025,
+        colorClass: "bg-purple-100 text-purple-700",
+        iconClass: "sparkles",
+        sortOrder: 1,
+      },
+      {
+        code: "gen-z",
+        name: "Generasi Z",
+        shortName: "Gen Z",
+        description: "Generasi internet dan media sosial",
+        startYear: 1997,
+        endYear: 2012,
+        colorClass: "bg-blue-100 text-blue-700",
+        iconClass: "smartphone",
+        sortOrder: 2,
+      },
+      {
+        code: "milenial",
+        name: "Generasi Milenial",
+        shortName: "Milenial",
+        description: "Generasi peralihan digital",
+        startYear: 1981,
+        endYear: 1996,
+        colorClass: "bg-green-100 text-green-700",
+        iconClass: "laptop",
+        sortOrder: 3,
+      },
+      {
+        code: "gen-x",
+        name: "Generasi X",
+        shortName: "Gen X",
+        description: "Generasi MTV dan grunge",
+        startYear: 1965,
+        endYear: 1980,
+        colorClass: "bg-orange-100 text-orange-700",
+        iconClass: "music",
+        sortOrder: 4,
+      },
+      {
+        code: "lintas-generasi",
+        name: "Lintas Generasi",
+        shortName: "Universal",
+        description: "Kata yang digunakan di berbagai generasi",
+        startYear: 1950,
+        endYear: 2025,
+        colorClass: "bg-gray-100 text-gray-700",
+        iconClass: "users",
+        sortOrder: 5,
+      },
+    ];
+
+    const insertedGenerations = await db
+      .insert(generations)
+      .values(generationsData)
+      .returning();
+    console.log(`✅ Inserted ${insertedGenerations.length} generations`);
+
+    // Seed languages
+    console.log("🌐 Seeding languages...");
+    const languagesData = [
+      {
+        code: "id",
+        name: "Bahasa Indonesia",
+        nativeName: "Bahasa Indonesia",
+        description: "Bahasa resmi Indonesia",
+        colorClass: "bg-red-100 text-red-700",
+        flag: "🇮🇩",
+        sortOrder: 1,
+      },
+      {
+        code: "en",
+        name: "English",
+        nativeName: "English",
+        description: "International language",
+        colorClass: "bg-blue-100 text-blue-700",
+        flag: "🇺🇸",
+        sortOrder: 2,
+      },
+      {
+        code: "jv",
+        name: "Bahasa Jawa",
+        nativeName: "Basa Jawa",
+        description: "Bahasa daerah Jawa",
+        colorClass: "bg-yellow-100 text-yellow-700",
+        flag: "🏛️",
+        sortOrder: 3,
+      },
+      {
+        code: "su",
+        name: "Bahasa Sunda",
+        nativeName: "Basa Sunda",
+        description: "Bahasa daerah Sunda",
+        colorClass: "bg-green-100 text-green-700",
+        flag: "🏔️",
+        sortOrder: 4,
+      },
+    ];
+
+    const insertedLanguages = await db
+      .insert(languages)
+      .values(languagesData)
+      .returning();
+    console.log(`✅ Inserted ${insertedLanguages.length} languages`);
+
+    // Seed users
+    console.log("👤 Seeding users...");
+    const usersData = [
+      {
+        username: "admin",
+        email: "admin@istilahkata.id",
+        emailVerified: true,
+        displayName: "Administrator",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Administrator platform IstilahKata",
+        totalVotes: 500,
+        totalWordCount: 1500,
+        role: "admin" as const,
+      },
+      {
+        username: "daud",
+        email: "daud@example.com",
+        emailVerified: true,
+        displayName: "Daud Simbolon",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Milenial yang concern dengan evolusi bahasa",
+        totalVotes: 189,
+        totalWordCount: 620,
+        role: "user" as const,
+      },
+      {
+        username: "sinta",
+        email: "sinta@example.com",
+        emailVerified: true,
+        displayName: "Sinta Maharani",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Content creator yang rajin berbagi pengetahuan",
+        totalVotes: 167,
+        totalWordCount: 480,
+        role: "moderator" as const,
+      },
+      {
+        username: "david",
+        email: "david@example.com",
+        emailVerified: true,
+        displayName: "David Pratama",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Gen Z enthusiast yang suka berbagi kata-kata gaul",
+        totalVotes: 245,
+        totalWordCount: 850,
+        role: "user" as const,
+      },
+      {
+        username: "rani",
+        email: "rani@example.com",
+        emailVerified: true,
+        displayName: "Rani Kusuma",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Digital native yang memahami tren terbaru",
+        totalVotes: 203,
+        totalWordCount: 710,
+        role: "user" as const,
+      },
+    ];
+
+    const insertedUsers = await db.insert(users).values(usersData).returning();
+    console.log(`✅ Inserted ${insertedUsers.length} users`);
+
+    // Create mapping objects
+    const userMap = Object.fromEntries(
+      insertedUsers.map((user) => [user.username, user])
+    );
+    const generationMap = Object.fromEntries(
+      insertedGenerations.map((gen) => [gen.code, gen])
+    );
+    const languageMap = Object.fromEntries(
+      insertedLanguages.map((lang) => [lang.code, lang])
+    );
+
+    // Seed words with realistic context
+    console.log("📝 Seeding words with realistic context...");
+    const wordsData = [
+      {
+        term: "gabut",
+        slug: "gabut",
+        context:
+          "Gw lagi gabut nih di rumah, mau ngapain ya? Udah main game dari tadi pagi.",
+        requestedBy: userMap.david.id,
+        totalViews: 1250,
+        totalExplanations: 3,
+        totalVotes: 105,
+        status: "approved" as const,
+      },
+      {
+        term: "kepo",
+        slug: "kepo",
+        context:
+          "Lu jangan kepo deh sama urusan orang! Biarin aja mereka pacaran.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 890,
+        totalExplanations: 2,
+        totalVotes: 89,
+        status: "approved" as const,
+      },
+      {
+        term: "baper",
+        slug: "baper",
+        context:
+          "Jangan baper dong, gw cuma bercanda aja kok. Lu serius amat sih.",
+        requestedBy: userMap.david.id,
+        totalViews: 1890,
+        totalExplanations: 3,
+        totalVotes: 129,
+        status: "approved" as const,
+      },
+      {
+        term: "ghosting",
+        slug: "ghosting",
+        context:
+          "Jadi temen gw kek ditinggalin gitu sama gebetannya, terus dia bilang kata ghosting.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 2100,
+        totalExplanations: 2,
+        totalVotes: 134,
+        status: "approved" as const,
+      },
+      {
+        term: "flex",
+        slug: "flex",
+        context:
+          "Dia suka flex iPhone barunya di Instagram story, padahal belinya nyicil.",
+        requestedBy: userMap.rani.id,
+        totalViews: 1120,
+        totalExplanations: 2,
+        totalVotes: 70,
+        status: "approved" as const,
+      },
+      {
+        term: "vibes",
+        slug: "vibes",
+        context:
+          "Vibes cafe ini enak banget buat nongkrong, cozy dan musiknya bagus.",
+        requestedBy: userMap.david.id,
+        totalViews: 987,
+        totalExplanations: 2,
+        totalVotes: 79,
+        status: "approved" as const,
+      },
+      {
+        term: "skuy",
+        slug: "skuy",
+        context: "Skuy, kita makan nasi padang! Gw udah laper dari tadi.",
+        requestedBy: userMap.rani.id,
+        totalViews: 756,
+        totalExplanations: 1,
+        totalVotes: 63,
+        status: "approved" as const,
+      },
+      {
+        term: "bucin",
+        slug: "bucin",
+        context:
+          "Lu bucin banget deh sama pacar, sampe temen-temen ditinggalin.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 2340,
+        totalExplanations: 2,
+        totalVotes: 178,
+        status: "approved" as const,
+      },
+      // Gen Alpha specific words
+      {
+        term: "ohio",
+        slug: "ohio",
+        context: "This place is so ohio, everything is weird and chaotic here.",
+        requestedBy: userMap.rani.id,
+        totalViews: 432,
+        totalExplanations: 1,
+        totalVotes: 28,
+        status: "approved" as const,
+      },
+      {
+        term: "gyatt",
+        slug: "gyatt",
+        context: "Gyatt! That car is absolutely insane looking!",
+        requestedBy: userMap.david.id,
+        totalViews: 298,
+        totalExplanations: 1,
+        totalVotes: 15,
+        status: "approved" as const,
+      },
+
+      // Milenial specific words
+      {
+        term: "galau",
+        slug: "galau",
+        context: "Gw lagi galau nih mikirin masa depan, bingung mau ngapain.",
+        requestedBy: userMap.daud.id,
+        totalViews: 756,
+        totalExplanations: 2,
+        totalVotes: 45,
+        status: "approved" as const,
+      },
+      {
+        term: "lebay",
+        slug: "lebay",
+        context: "Lu lebay banget deh, masa gitu aja sampai drama segala.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 634,
+        totalExplanations: 1,
+        totalVotes: 38,
+        status: "approved" as const,
+      },
+
+      // Gen X words
+      {
+        term: "mantap",
+        slug: "mantap",
+        context: "Mantap jiwa! Pertunjukan tadi malam benar-benar luar biasa.",
+        requestedBy: userMap.admin.id,
+        totalViews: 892,
+        totalExplanations: 1,
+        totalVotes: 52,
+        status: "approved" as const,
+      },
+
+      // Cross-generational words
+      {
+        term: "keren",
+        slug: "keren",
+        context: "Wah keren banget motornya, pasti mahal tuh.",
+        requestedBy: userMap.daud.id,
+        totalViews: 1124,
+        totalExplanations: 2,
+        totalVotes: 67,
+        status: "approved" as const,
+      },
+      {
+        term: "oke",
+        slug: "oke",
+        context: "Oke deh, gw setuju sama rencana lu.",
+        requestedBy: userMap.sinta.id,
+        totalViews: 445,
+        totalExplanations: 1,
+        totalVotes: 23,
+        status: "approved" as const,
+      },
+    ];
+
+    const insertedWords = await db.insert(words).values(wordsData).returning();
+    console.log(`✅ Inserted ${insertedWords.length} words`);
+
+    // Create word mapping
+    const wordMap = Object.fromEntries(
+      insertedWords.map((word) => [word.term, word])
+    );
+
+    // Seed word-language relationships
+    console.log("🌐 Seeding word-language relationships...");
+    const wordLanguageData = [
+      // Indonesian words
+      {
+        wordId: wordMap.gabut.id,
+        languageId: languageMap.id.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.kepo.id,
+        languageId: languageMap.id.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.baper.id,
+        languageId: languageMap.id.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.skuy.id,
+        languageId: languageMap.id.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.bucin.id,
+        languageId: languageMap.id.id,
+        isPrimary: true,
+      },
+
+      // English words with secondary Indonesian
+      {
+        wordId: wordMap.ghosting.id,
+        languageId: languageMap.en.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.ghosting.id,
+        languageId: languageMap.id.id,
+        isPrimary: false,
+      },
+      {
+        wordId: wordMap.flex.id,
+        languageId: languageMap.en.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.flex.id,
+        languageId: languageMap.id.id,
+        isPrimary: false,
+      },
+      {
+        wordId: wordMap.vibes.id,
+        languageId: languageMap.en.id,
+        isPrimary: true,
+      },
+      {
+        wordId: wordMap.vibes.id,
+        languageId: languageMap.id.id,
+        isPrimary: false,
+      },
+    ];
+
+    await db.insert(wordLanguages).values(wordLanguageData);
+    console.log(
+      `✅ Inserted ${wordLanguageData.length} word-language relationships`
+    );
+
+    // Seed word-generation relationships
+    console.log("🔗 Seeding word-generation relationships...");
+    const wordGenerationData = [
+      {
+        wordId: wordMap.gabut.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.gabut.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: false,
+        confidence: 0.8,
+      },
+      {
+        wordId: wordMap.kepo.id,
+        generationId: generationMap["lintas-generasi"].id,
+        isPrimary: true,
+        confidence: 0.85,
+      },
+      {
+        wordId: wordMap.baper.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      {
+        wordId: wordMap.ghosting.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.ghosting.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: false,
+        confidence: 0.7,
+      },
+      {
+        wordId: wordMap.flex.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.vibes.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.85,
+      },
+      {
+        wordId: wordMap.skuy.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      {
+        wordId: wordMap.bucin.id,
+        generationId: generationMap["gen-z"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      // Gen Alpha words
+      {
+        wordId: wordMap.ohio.id,
+        generationId: generationMap["gen-alpha"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+      {
+        wordId: wordMap.gyatt.id,
+        generationId: generationMap["gen-alpha"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+
+      // Milenial words
+      {
+        wordId: wordMap.galau.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.lebay.id,
+        generationId: generationMap.milenial.id,
+        isPrimary: true,
+        confidence: 0.85,
+      },
+
+      // Gen X words
+      {
+        wordId: wordMap.mantap.id,
+        generationId: generationMap["gen-x"].id,
+        isPrimary: true,
+        confidence: 0.8,
+      },
+
+      // Cross-generational
+      {
+        wordId: wordMap.keren.id,
+        generationId: generationMap["lintas-generasi"].id,
+        isPrimary: true,
+        confidence: 0.9,
+      },
+      {
+        wordId: wordMap.oke.id,
+        generationId: generationMap["lintas-generasi"].id,
+        isPrimary: true,
+        confidence: 0.95,
+      },
+    ];
+
+    await db.insert(wordGenerations).values(wordGenerationData);
+    console.log(
+      `✅ Inserted ${wordGenerationData.length} word-generation relationships`
+    );
+
+    // Seed explanations
+    console.log("💭 Seeding explanations...");
+    const explanationsData = [
+      {
+        wordId: wordMap.gabut.id,
+        userId: userMap.daud.id,
+        content:
+          'Akronim dari "gaji buta". Kondisi bosan atau tidak ada kegiatan yang berarti, awalnya digunakan di lingkungan kerja untuk menggambarkan situasi tidak ada pekerjaan tapi tetep harus standby.',
+        example:
+          "Hari ini gabut banget di kantor, gak ada kerjaan sama sekali tapi tetep harus standby.",
+        votes: 156,
+        wordCount: 32,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.kepo.id,
+        userId: userMap.sinta.id,
+        content:
+          'Berasal dari bahasa Hokkien "kay poh" yang berarti suka mencampuri urusan orang lain atau terlalu ingin tahu hal-hal yang bukan urusan kita.',
+        example: "Jangan kepo deh sama hubungan mereka, itu kan privasi.",
+        votes: 89,
+        wordCount: 28,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.baper.id,
+        userId: userMap.david.id,
+        content:
+          'Singkatan dari "bawa perasaan". Digunakan ketika seseorang terlalu serius menanggapi candaan atau komentar yang sebenarnya tidak perlu diambil hati.',
+        example: "Jangan baper dong, itu kan cuma bercandaan doang.",
+        votes: 87,
+        wordCount: 25,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.ghosting.id,
+        userId: userMap.rani.id,
+        content:
+          "Praktik tiba-tiba menghilang dari komunikasi tanpa penjelasan, seperti hantu yang menghilang. Biasa terjadi dalam hubungan dating atau pertemanan.",
+        example:
+          "Dia nge-ghost aku setelah kencan ketiga, padahal kayaknya fine-fine aja.",
+        votes: 76,
+        wordCount: 23,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.flex.id,
+        userId: userMap.rani.id,
+        content:
+          "Memamerkan atau show off sesuatu dengan sengaja, biasanya pencapaian, barang mahal, atau keunggulan tertentu untuk mendapat pengakuan.",
+        example: "Dia suka flex mobil barunya di sosmed terus.",
+        votes: 65,
+        wordCount: 22,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.vibes.id,
+        userId: userMap.david.id,
+        content:
+          "Suasana, energi, atau aura yang dirasakan dari seseorang, tempat, atau situasi. Bisa positif atau negatif tergantung konteks.",
+        example: "Vibes kafe ini enak banget, cocok buat kerja sambil ngopi.",
+        votes: 58,
+        wordCount: 21,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.skuy.id,
+        userId: userMap.david.id,
+        content:
+          'Kata ajakan yang berasal dari "yuk" yang dibalik. Digunakan untuk mengajak seseorang melakukan sesuatu dengan antusias.',
+        example: "Skuy ke mall, lagi ada sale besar-besaran!",
+        votes: 45,
+        wordCount: 19,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.bucin.id,
+        userId: userMap.sinta.id,
+        content:
+          'Singkatan dari "budak cinta". Menggambarkan seseorang yang terlalu menuruti kemauan pasangan hingga mengabaikan hal lain.',
+        example: "Dia bucin banget sama pacarnya, temen-temen jadi terabaikan.",
+        votes: 42,
+        wordCount: 20,
+        isAccepted: true,
+      },
+    ];
+
+    const insertedExplanations = await db
+      .insert(explanations)
+      .values(explanationsData)
+      .returning();
+    console.log(`✅ Inserted ${insertedExplanations.length} explanations`);
+
+    console.log("🎉 Database seeding completed successfully!");
+    console.log("\n📝 Context Examples Added:");
+    wordsData.forEach((word, index) => {
+      console.log(`${index + 1}. ${word.term}: "${word.context}"`);
+    });
+
+    console.log("\n🏠 Expected Daily Words (sorted by votes):");
+    explanationsData
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, 6)
+      .forEach((exp, index) => {
+        // const word = wordsData.find((w) => w.requestedBy === exp.userId);
+        console.log(
+          `${index + 1}. ${Object.keys(wordMap).find(
+            (k) => wordMap[k].id === exp.wordId
+          )} - ${exp.votes} votes`
+        );
+      });
+  } catch (error) {
+    console.error("❌ Error seeding database:", error);
+    process.exit(1);
+  } finally {
+    // Close database connection
+    await queryClient.end();
+    console.log("🔌 Database connection closed");
+  }
+}
+
+// Run the seeding
+main()
+  .then(() => {
+    console.log("✅ Seeding process completed successfully");
+    process.exit(0);
+  })
   .catch((error) => {
     console.error("❌ Seeding failed:", error);
     process.exit(1);
-  })
-  .finally(() => {
-    process.exit(0);
   });
