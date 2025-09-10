@@ -709,7 +709,7 @@ export async function getRecentContributions(
   }));
 }
 
-// Leaderboard - Fixed TypeScript errors
+// Fixed Leaderboard Query - Replace the existing getLeaderboard function
 export async function getLeaderboard(
   limit: number = 10
 ): Promise<LeaderboardUser[]> {
@@ -723,20 +723,20 @@ export async function getLeaderboard(
       // Get primary generation from user's most active word explanations
       generationName: sql<string | null>`
         (SELECT g.name 
-         FROM ${explanations} e
-         JOIN ${wordGenerations} wg ON e.word_id = wg.word_id AND wg.is_primary = true
-         JOIN ${generations} g ON wg.generation_id = g.id
-         WHERE e.user_id = ${users.id}
+         FROM explanations e
+         JOIN word_generations wg ON e.word_id = wg.word_id AND wg.is_primary = true
+         JOIN generations g ON wg.generation_id = g.id
+         WHERE e.user_id = users.id
          GROUP BY g.name, g.sort_order
          ORDER BY COUNT(*) DESC, g.sort_order ASC
          LIMIT 1)
       `,
       generationColorClass: sql<string | null>`
         (SELECT g.color_class 
-         FROM ${explanations} e
-         JOIN ${wordGenerations} wg ON e.word_id = wg.word_id AND wg.is_primary = true
-         JOIN ${generations} g ON wg.generation_id = g.id
-         WHERE e.user_id = ${users.id}
+         FROM explanations e
+         JOIN word_generations wg ON e.word_id = wg.word_id AND wg.is_primary = true
+         JOIN generations g ON wg.generation_id = g.id
+         WHERE e.user_id = users.id
          GROUP BY g.color_class, g.sort_order
          ORDER BY COUNT(*) DESC, g.sort_order ASC
          LIMIT 1)
