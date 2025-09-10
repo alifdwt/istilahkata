@@ -23,6 +23,22 @@ import {
   wordViews,
 } from "@/lib/db/schema";
 
+export interface HomepageStats {
+  totalWords: number;
+  totalExplanations: number;
+  totalVotes: number;
+  totalUsers: number;
+  generationStats: {
+    id: string;
+    code: string;
+    name: string;
+    shortName: string;
+    colorClass: string;
+    totalWords: number;
+    percentage: number;
+  }[];
+}
+
 // Updated types to handle nullable database fields
 export interface DailyWord {
   id: string;
@@ -142,6 +158,77 @@ export interface GenerationHighlight {
   }[];
   recentActivity: number; // Activity in last 7 days
   trendingTag: string; // "Baru dan viral", "Paling aktif", "Timeless", etc.
+}
+
+export async function getHomepageStats(): Promise<HomepageStats> {
+  // Get overall platform statistics
+  const [overallStats] = await db
+    .select({
+      totalWords: sql<number>`COUNT(DISTINCT ${words.id})`,
+      totalExplanations: sql<number>`COALESCE(SUM(${words.totalExplanations}), 0)`,
+      totalVotes: sql<number>`COALESCE(SUM(${words.totalVotes}), 0)`,
+      totalUsers: sql<number>`COUNT(DISTINCT ${explanations.userId})`,
+    })
+    .from(words)
+    .leftJoin(explanations, eq(explanations.wordId, words.id))
+    .where(eq(words.status, "approved"));
+
+  // Get generation breakdown with word counts
+  const generationBreakdown = await db
+    .select({
+      generationId: wordGenerations.generationId,
+      generationCode: generations.code,
+      generationName: generations.name,
+      generationShortName: generations.shortName,
+      generationColorClass: generations.colorClass,
+      totalWords: count(words.id),
+    })
+    .from(wordGenerations)
+    .innerJoin(words, eq(wordGenerations.wordId, words.id))
+    .innerJoin(generations, eq(wordGenerations.generationId, generations.id))
+    .where(
+      and(
+        eq(wordGenerations.isPrimary, true),
+        eq(words.status, "approved"),
+        eq(generations.isActive, true)
+      )
+    )
+    .groupBy(
+      wordGenerations.generationId,
+      generations.code,
+      generations.name,
+      generations.shortName,
+      generations.colorClass,
+      generations.sortOrder
+    )
+    .orderBy(asc(generations.sortOrder));
+
+  // Calculate percentages and format data
+  const totalWords = overallStats?.totalWords ?? 0;
+
+  // Filter out null generationId and handle type safety
+  const generationStats = generationBreakdown
+    .filter((gen) => gen.generationId !== null) // Filter out null IDs
+    .map((gen) => ({
+      id: gen.generationId!, // Use non-null assertion since we filtered
+      code: gen.generationCode,
+      name: gen.generationName,
+      shortName: gen.generationShortName,
+      colorClass: gen.generationColorClass,
+      totalWords: gen.totalWords ?? 0,
+      percentage:
+        totalWords > 0
+          ? Math.round(((gen.totalWords ?? 0) / totalWords) * 100)
+          : 0,
+    }));
+
+  return {
+    totalWords: totalWords,
+    totalExplanations: overallStats?.totalExplanations ?? 0,
+    totalVotes: overallStats?.totalVotes ?? 0,
+    totalUsers: overallStats?.totalUsers ?? 0,
+    generationStats,
+  };
 }
 
 // Daily Words - Top voted explanations (FIXED TypeScript errors)
@@ -405,6 +492,7 @@ export async function getTrendingWords(
   limit: number = 8
 ): Promise<TrendingWord[]> {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const twentyFourHoursAgoISO = twentyFourHoursAgo.toISOString(); // Convert to ISO string
 
   // Get words with recent activity
   const trendingWords = await db
@@ -414,7 +502,7 @@ export async function getTrendingWords(
       slug: words.slug,
       totalViews: words.totalViews,
       totalExplanations: words.totalExplanations,
-      recentViews: sql<number>`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgo} THEN 1 END)`,
+      recentViews: sql<number>`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgoISO} THEN 1 END)`,
     })
     .from(words)
     .leftJoin(wordViews, eq(wordViews.wordId, words.id))
@@ -428,7 +516,7 @@ export async function getTrendingWords(
     )
     .orderBy(
       desc(
-        sql`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgo} THEN 1 END)`
+        sql`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgoISO} THEN 1 END)`
       ),
       desc(words.totalViews)
     )

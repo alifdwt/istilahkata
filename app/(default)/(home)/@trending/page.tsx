@@ -1,9 +1,13 @@
 import { Eye, Flame, ThumbsUp } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-export default function TrendingSlot() {
+import { getTrendingWords } from "@/lib/db/queries/homepage";
+
+export default async function TrendingSlot() {
+  // Fetch trending words from database
+  const trendingWords = await getTrendingWords(6); // Get 6 trending words
+
   return (
     <section>
       <div className="mb-6 flex items-center justify-between">
@@ -19,79 +23,118 @@ export default function TrendingSlot() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            term: "baper",
-            desc: "Bawa perasaan, terlalu sensitif",
-            votes: 67,
-            views: 456,
-            generation: "Milenial",
-            genColor: "bg-green-100 text-green-700",
-            user: "@sinta",
-          },
-          {
-            term: "skuy",
-            desc: "Ajakan untuk pergi bersama",
-            votes: 43,
-            views: 234,
-            generation: "Gen Z",
-            genColor: "bg-blue-100 text-blue-700",
-            user: "@rani",
-          },
-          {
-            term: "ghosting",
-            desc: "Menghilang tanpa kabar",
-            votes: 89,
-            views: 567,
-            generation: "Gen Z",
-            genColor: "bg-blue-100 text-blue-700",
-            user: "@alex",
-          },
-        ].map((word) => (
-          <div
-            key={word.term}
-            className="rounded-lg border bg-card p-4 transition-shadow hover:shadow-sm"
+      {trendingWords.length === 0 ? (
+        <div className="rounded-lg border-2 border-dashed border-muted p-8 text-center">
+          <Flame className="mx-auto h-12 w-12 text-muted-foreground/50" />
+          <h4 className="mt-4 text-lg font-semibold text-muted-foreground">
+            Belum Ada Kata Trending
+          </h4>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Mulai berkontribusi untuk melihat kata-kata yang sedang populer!
+          </p>
+          <Link
+            href="/contribute"
+            className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
           >
-            <h5 className="mb-2 font-mono font-semibold text-primary">
-              {word.term}
-            </h5>
-            <p className="mb-2 text-sm text-muted-foreground">{word.desc}</p>
-
-            {/* Generation Tag */}
-            <div className="mb-2">
-              <span
-                className={`rounded px-2 py-0.5 text-xs font-medium ${word.genColor}`}
-              >
-                {word.generation}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/placeholder/potrait-placeholder.png"
-                  alt={word.user}
-                  width={16}
-                  height={16}
-                  className="rounded-full"
-                />
-                <span>{word.user}</span>
-              </div>
-              <div className="flex gap-2">
-                <span className="flex items-center gap-1">
-                  <ThumbsUp className="h-3 w-3 text-secondary" />
-                  {word.votes}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  {word.views}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            Mulai Berkontribusi
+          </Link>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {trendingWords.map((word) => (
+            <TrendingWordCard key={word.id} word={word} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
+
+// Trending Word Card Component
+const TrendingWordCard = ({
+  word,
+}: {
+  word: Awaited<ReturnType<typeof getTrendingWords>>[0];
+}) => {
+  return (
+    <Link
+      href={`/word/${word.slug}`}
+      className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+      aria-label={`Lihat detail kata trending ${word.term} dengan ${word.recentViews} views baru`}
+      role="article"
+    >
+      {/* Trending indicator */}
+      <div className="absolute top-3 right-3">
+        <div className="flex items-center gap-1 rounded-full bg-accent/10 px-2 py-1 text-xs font-medium text-accent">
+          <Flame className="h-3 w-3" />
+          <span>+{word.recentViews}</span>
+        </div>
+      </div>
+
+      {/* Word title */}
+      <div className="mb-3">
+        <h5 className="font-mono text-lg font-semibold text-primary transition-colors group-hover:text-primary/90">
+          {word.term}
+        </h5>
+      </div>
+
+      {/* Languages */}
+      {word.languages.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1">
+          {word.languages.slice(0, 2).map((language, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-1 rounded bg-muted px-2 py-1 text-xs"
+            >
+              {language.flag && (
+                <span className="text-sm" role="img" aria-label={language.name}>
+                  {language.flag}
+                </span>
+              )}
+              <span className="text-muted-foreground">{language.name}</span>
+            </div>
+          ))}
+          {word.languages.length > 2 && (
+            <span className="flex items-center rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
+              +{word.languages.length - 2}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Generation Tag */}
+      {word.topGeneration && (
+        <div className="mb-3">
+          <span
+            className={`rounded px-2 py-1 text-xs font-medium ${word.topGeneration.colorClass}`}
+          >
+            {word.topGeneration.name}
+          </span>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            <span>{word.totalViews.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <ThumbsUp className="h-4 w-4" />
+            <span>{word.totalExplanations}</span>
+          </div>
+        </div>
+
+        {/* Recent activity indicator */}
+        <div className="flex items-center gap-1 text-accent">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+          <span className="text-xs font-medium">Hot</span>
+        </div>
+      </div>
+
+      {/* Hover effect overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+    </Link>
+  );
+};
