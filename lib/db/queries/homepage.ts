@@ -405,6 +405,7 @@ export async function getTrendingWords(
   limit: number = 8
 ): Promise<TrendingWord[]> {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const twentyFourHoursAgoISO = twentyFourHoursAgo.toISOString(); // Convert to ISO string
 
   // Get words with recent activity
   const trendingWords = await db
@@ -414,7 +415,7 @@ export async function getTrendingWords(
       slug: words.slug,
       totalViews: words.totalViews,
       totalExplanations: words.totalExplanations,
-      recentViews: sql<number>`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgo} THEN 1 END)`,
+      recentViews: sql<number>`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgoISO} THEN 1 END)`,
     })
     .from(words)
     .leftJoin(wordViews, eq(wordViews.wordId, words.id))
@@ -428,7 +429,7 @@ export async function getTrendingWords(
     )
     .orderBy(
       desc(
-        sql`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgo} THEN 1 END)`
+        sql`COUNT(CASE WHEN ${wordViews.createdAt} > ${twentyFourHoursAgoISO} THEN 1 END)`
       ),
       desc(words.totalViews)
     )
