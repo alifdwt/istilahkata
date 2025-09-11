@@ -1,4 +1,17 @@
-// Generation utilities based on actual schema
+export interface GenerationInfo {
+  id: string;
+  name: string;
+  code: string;
+  isPrimary: boolean;
+}
+
+export interface LanguageInfo {
+  id: string;
+  name: string;
+  code: string;
+  isPrimary: boolean;
+}
+
 export function getGenerationColor(code: string): string {
   const colors: Record<string, string> = {
     "gen-alpha": "bg-purple-100 text-purple-700",
