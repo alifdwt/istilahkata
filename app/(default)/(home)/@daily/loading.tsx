@@ -1,56 +1,52 @@
-"use client";
-
 import { StarIcon } from "lucide-react";
-import { useEffect } from "react";
 
-interface ErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-export default function DailyWordsError({ error, reset }: ErrorProps) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("Daily Words Error:", error);
-  }, [error]);
-
+export default function DailyWordsLoading() {
   return (
     <section>
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="flex items-center gap-3 text-2xl font-bold">
+        <div className="flex items-center gap-3">
           <StarIcon className="h-6 w-6 text-accent" />
-          Kata-kata Hari Ini
-        </h3>
+          <h3 className="text-2xl font-bold">Kata-kata Hari Ini</h3>
+        </div>
+        <div className="h-6 w-24 animate-pulse rounded bg-gray-200"></div>
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-          <svg
-            className="h-6 w-6 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <div className="grid gap-6 md:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="animate-pulse rounded-xl border bg-card p-6 shadow-sm"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-        </div>
-        <h4 className="mb-2 text-lg font-medium text-red-900">
-          Gagal memuat kata-kata hari ini
-        </h4>
-        <p className="mb-4 text-sm text-red-700">
-          Terjadi kesalahan saat mengambil data dari server
-        </p>
-        <button
-          onClick={reset}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
-        >
-          Coba Lagi
-        </button>
+            <div className="mb-3 flex items-start justify-between">
+              <div className="h-6 w-24 rounded bg-gray-200"></div>
+              <div className="h-5 w-16 rounded bg-gray-200"></div>
+            </div>
+
+            <div className="mb-4 space-y-2">
+              <div className="h-4 w-full rounded bg-gray-200"></div>
+              <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+            </div>
+
+            <div className="mb-4 flex gap-2">
+              <div className="h-6 w-20 rounded bg-gray-200"></div>
+              <div className="h-6 w-24 rounded bg-gray-200"></div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gray-200"></div>
+                <div className="space-y-1">
+                  <div className="h-4 w-16 rounded bg-gray-200"></div>
+                  <div className="h-3 w-12 rounded bg-gray-200"></div>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="h-4 w-8 rounded bg-gray-200"></div>
+                <div className="h-4 w-8 rounded bg-gray-200"></div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

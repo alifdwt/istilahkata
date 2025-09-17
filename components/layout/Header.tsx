@@ -26,6 +26,7 @@ export default async function Header() {
               alt="IstilahKata Logo"
               width={110}
               height={24}
+              priority
             />
           </Link>
           <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
