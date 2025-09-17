@@ -39,10 +39,14 @@ export default async function WordHeader({ params }: WordHeaderProps) {
       {/* Main Header */}
       <div className="mb-6 flex items-start justify-between">
         <div className="flex-1">
-          {/* Word Title */}
-          <h1 className="mb-3 font-mono text-4xl font-bold text-primary lg:text-5xl">
-            {word.term}
-          </h1>
+          <div className="flex items-center justify-between">
+            {/* Word Title */}
+            <h1 className="mb-3 font-mono text-4xl font-bold text-primary lg:text-5xl">
+              {word.term}
+            </h1>
+            {/* Action Buttons - Static for now, can be made interactive with client component */}
+            <WordActionButtonsStatic />
+          </div>
 
           {/* Context/Example if available */}
           {word.context && (
@@ -87,10 +91,7 @@ export default async function WordHeader({ params }: WordHeaderProps) {
           </div>
         </div>
 
-        {/* Action Buttons - Static for now, can be made interactive with client component */}
-        <div className="ml-4">
-          <WordActionButtonsStatic />
-        </div>
+        <div></div>
       </div>
 
       {/* Tags and Metadata Row */}

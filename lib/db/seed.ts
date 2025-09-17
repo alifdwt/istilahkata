@@ -244,6 +244,29 @@ async function main() {
         totalWordCount: 710,
         role: "user" as const,
       },
+      {
+        username: "budi",
+        email: "budi@example.com",
+        emailVerified: true,
+        displayName: "Budi Santoso",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Pengusaha yang suka berbagi pengetahuan",
+        totalVotes: 157,
+        totalWordCount: 500,
+        role: "user" as const,
+      },
+      // dewi
+      {
+        username: "dewi",
+        email: "dewi@example.com",
+        emailVerified: true,
+        displayName: "Dewi Kusuma",
+        avatar: "/placeholder/potrait-placeholder.png",
+        bio: "Pengusaha yang suka berbagi pengetahuan",
+        totalVotes: 157,
+        totalWordCount: 500,
+        role: "user" as const,
+      },
     ];
 
     const insertedUsers = await db.insert(users).values(usersData).returning();
@@ -425,6 +448,35 @@ async function main() {
         totalViews: 445,
         totalExplanations: 1,
         totalVotes: 23,
+        status: "approved" as const,
+      },
+      {
+        term: "santuy",
+        slug: "santuy",
+        context: "Santuy, gak perlu khawatir.",
+        requestedBy: userMap.rani.id,
+        totalViews: 1120,
+        totalExplanations: 2,
+        totalVotes: 70,
+        status: "approved" as const,
+      },
+      {
+        term: "salty",
+        slug: "salty",
+        context: "Kalo jadi orang jangan salty deh.",
+        requestedBy: userMap.david.id,
+        totalViews: 1120,
+        totalExplanations: 2,
+        totalVotes: 70,
+        status: "approved" as const,
+      },
+      {
+        term: "toxic",
+        slug: "toxic",
+        context: "Toxic, toxic, toxic.",
+        requestedBy: userMap.admin.id,
+        totalViews: 1120,
+        totalExplanations: 2,
         status: "approved" as const,
       },
     ];
@@ -708,6 +760,251 @@ async function main() {
         votes: 42,
         wordCount: 20,
         isAccepted: true,
+      },
+      {
+        wordId: wordMap.gabut.id,
+        userId: userMap.sinta.id, // @sinta
+        content:
+          "Gabut itu perasaan bosan ekstrem ketika tidak ada yang bisa dikerjain. Biasanya terjadi pas weekend atau liburan panjang. Rasanya kayak waktu berjalan lambat banget dan pengen ngapa-ngapain tapi bingung mau ngapain.",
+        example:
+          "Udah 3 hari gabut di rumah, film udah ditontonin semua, games udah bosen.",
+        votes: 89,
+        wordCount: 28,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.gabut.id,
+        userId: userMap.rani.id, // @rani
+        content:
+          "Gabut dalam konteks media sosial artinya lagi gak ada konten menarik buat di-scroll. Jadi cuma bisa lihat-lihat timeline berulang kali sambil nunggu ada yang update status atau post foto baru.",
+        example: "Gabut banget, udah scroll TikTok dari atas ke bawah 5 kali.",
+        votes: 67,
+        wordCount: 22,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.gabut.id,
+        userId: userMap.budi.id, // @budi
+        content:
+          "Menurut gue gabut itu kondisi mental ketika otak butuh stimulasi tapi gak tau mau ngapain. Beda sama malas ya, kalau malas itu tau ada kerjaan tapi gak mau ngerjain. Kalau gabut ini genuinely gak ada aktivitas.",
+        example: "Gabut parah nih, otak rasanya kayak mau melted.",
+        votes: 45,
+        wordCount: 32,
+        isAccepted: false,
+      },
+
+      // SKUY explanations
+      {
+        wordId: wordMap.skuy.id,
+        userId: userMap.sinta.id, // @sinta
+        content:
+          "Skuy itu singkatan dari 'ayo skuy' yang artinya ayo pergi atau ayo lakukan sesuatu. Kata ini populer banget di kalangan anak muda buat ngajak temen-temen melakukan aktivitas bareng.",
+        example: "Skuy ke mall, lagi ada sale besar-besaran!",
+        votes: 234,
+        wordCount: 25,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.skuy.id,
+        userId: userMap.rani.id, // @rani
+        content:
+          "Skuy bisa juga dipake buat nyemangatin diri sendiri atau orang lain. Kayak kata motivasi gitu, biar lebih semangat ngerjain sesuatu atau berangkat ke suatu tempat.",
+        example: "Besok ujian, skuy belajar dari sekarang!",
+        votes: 178,
+        wordCount: 21,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.skuy.id,
+        userId: userMap.dewi.id, // @dewi
+        content:
+          "Skuy itu evolusi dari kata 'yuk' tapi kedengerannya lebih modern dan gaul. Fungsinya sama sih, buat ngajak orang, tapi skuy ini lebih catchy dan sering dipake di social media.",
+        example: "Skuy nonton bioskop, film baru lagi bagus katanya.",
+        votes: 156,
+        wordCount: 24,
+        isAccepted: false,
+      },
+
+      // SANTUY explanations
+      {
+        wordId: wordMap.santuy.id,
+        userId: userMap.budi.id, // @budi
+        content:
+          "Santuy itu gabungan dari 'santai' dan 'enjoy'. Artinya rileks, gak stress, dan menikmati hidup apa adanya. Biasanya dipake buat bilang ke orang lain supaya gak terlalu tegang.",
+        example: "Santuy aja bro, masalah pasti ada solusinya.",
+        votes: 198,
+        wordCount: 26,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.santuy.id,
+        userId: userMap.david.id, // @david
+        content:
+          "Santuy bisa juga berarti approach hidup yang gak terlalu ambisius. Lebih memilih kebahagiaan sederhana daripada ngejar target yang bikin stress. Hidup yang balance gitu.",
+        example: "Gaji pas-pasan tapi santuy, yang penting keluarga bahagia.",
+        votes: 134,
+        wordCount: 23,
+        isAccepted: false,
+      },
+
+      // BUCIN explanations (update existing + add new)
+      {
+        wordId: wordMap.bucin.id,
+        userId: userMap.dewi.id, // @dewi
+        content:
+          "Bucin singkatan dari 'budak cinta'. Ini sebutan buat orang yang udah terlalu dalam cintanya sampai rela ngelakuin apa aja demi pasangan, bahkan hal-hal yang sebenernya memalukan atau merugikan diri sendiri.",
+        example: "Dia bucin banget sama pacarnya, temen-temen jadi terabaikan.",
+        votes: 167,
+        wordCount: 30,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.bucin.id,
+        userId: userMap.sinta.id, // @sinta
+        content:
+          "Bucin itu kondisi ketika seseorang kehilangan identitas dirinya karena terlalu fokus sama pasangan. Biasanya jadi gak punya waktu buat temen, hobi, atau hal-hal lain selain pacaran.",
+        example:
+          "Sejak jadian, dia jadi bucin parah, gak pernah nongkrong lagi.",
+        votes: 89,
+        wordCount: 24,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.bucin.id,
+        userId: userMap.rani.id, // @rani
+        content:
+          "Bucin dalam konteks positif bisa juga berarti orang yang loyal dan setia sama pasangan. Tergantung konteks sih, kadang dipake buat ngeledek, kadang buat apresiasi kesetiaan seseorang.",
+        example: "Bucin tapi loyal, 10 tahun pacaran gak pernah selingkuh.",
+        votes: 156,
+        wordCount: 22,
+        isAccepted: false,
+      },
+
+      // FLEX explanations
+      {
+        wordId: wordMap.flex.id,
+        userId: userMap.david.id, // @david
+        content:
+          "Flex artinya pamer atau show off sesuatu yang dimiliki, biasanya harta, pencapaian, atau privilege. Tujuannya biar orang lain tau kalau kita punya sesuatu yang keren atau mahal.",
+        example: "Flex mobil baru di Instagram story terus.",
+        votes: 203,
+        wordCount: 26,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.flex.id,
+        userId: userMap.budi.id, // @budi
+        content:
+          "Flex bisa juga berarti menunjukkan kemampuan atau skill yang dimiliki. Gak selalu soal barang material, tapi juga bisa achievement, talent, atau pengalaman unik yang jarang dimiliki orang lain.",
+        example: "Dia flex skill coding-nya dengan bikin app keren.",
+        votes: 178,
+        wordCount: 25,
+        isAccepted: false,
+      },
+
+      // SALTY explanations
+      {
+        wordId: wordMap.salty.id,
+        userId: userMap.rani.id, // @rani
+        content:
+          "Salty itu perasaan kesel, iri, atau bitter karena kalah atau gak dapet sesuatu yang diinginkan. Biasanya muncul ketika orang lain berhasil sedangkan kita gagal, jadi mood jadi kayak asin gitu.",
+        example:
+          "Salty banget lihat mantan udah nikah, padahal baru putus 2 bulan.",
+        votes: 145,
+        wordCount: 28,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.salty.id,
+        userId: userMap.dewi.id, // @dewi
+        content:
+          "Salty juga bisa berarti attitude yang defensive atau mudah tersinggung ketika dikritik atau disindir. Orang yang salty biasanya gampang triggered dan responnya cenderung emosional.",
+        example:
+          "Dikritik dikit langsung salty, padahal cuma saran konstruktif.",
+        votes: 98,
+        wordCount: 21,
+        isAccepted: false,
+      },
+
+      // GHOSTING explanations
+      {
+        wordId: wordMap.ghosting.id,
+        userId: userMap.sinta.id, // @sinta
+        content:
+          "Ghosting itu tindakan menghilang tiba-tiba dari kehidupan seseorang tanpa penjelasan. Biasanya terjadi dalam konteks dating atau pertemanan, di mana seseorang tiba-tiba berhenti membalas chat atau telepon.",
+        example:
+          "Udah 2 minggu di-ghosting, chat gak dibales, telepon gak diangkat.",
+        votes: 267,
+        wordCount: 28,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.ghosting.id,
+        userId: userMap.budi.id, // @budi
+        content:
+          "Ghosting adalah bentuk komunikasi pasif-agresif ketika seseorang gak mau konfrontasi langsung. Daripada ngomong jujur kalau udah gak tertarik, mereka milih menghilang aja.",
+        example: "Dia ghosting daripada bilang langsung kalau udah gak suka.",
+        votes: 189,
+        wordCount: 23,
+        isAccepted: false,
+      },
+
+      // VIBES explanations
+      {
+        wordId: wordMap.vibes.id,
+        userId: userMap.david.id, // @david
+        content:
+          "Vibes itu energi atau aura yang dipancarkan seseorang atau suatu tempat. Bisa positif atau negatif, dan biasanya kita bisa ngerasain vibes ini secara intuisi tanpa harus dijelaskan secara detail.",
+        example: "Vibes tempat ini enak banget, bikin betah berlama-lama.",
+        votes: 187,
+        wordCount: 25,
+        isAccepted: false,
+      },
+      {
+        wordId: wordMap.vibes.id,
+        userId: userMap.sinta.id, // @sinta
+        content:
+          "Vibes juga bisa berarti suasana hati atau mood yang sedang dirasakan. Kadang kita bilang 'lagi good vibes' atau 'bad vibes' tergantung perasaan saat itu.",
+        example: "Hari ini vibes-nya lagi gak enak, pengen di rumah aja.",
+        votes: 134,
+        wordCount: 20,
+        isAccepted: false,
+      },
+
+      // TOXIC explanations
+      {
+        wordId: wordMap.toxic.id,
+        userId: userMap.rani.id, // @rani
+        content:
+          "Toxic artinya perilaku yang merusak dan merugikan orang lain atau diri sendiri. Biasanya dalam konteks relationship atau friendship, toxic behavior ini bisa berupa manipulasi, possessive, atau selalu menyalahkan orang lain.",
+        example:
+          "Hubungan mereka toxic banget, selalu bertengkar dan saling menyakiti.",
+        votes: 198,
+        wordCount: 28,
+        isAccepted: true,
+      },
+      {
+        wordId: wordMap.toxic.id,
+        userId: userMap.budi.id, // @budi
+        content:
+          "Toxic juga bisa merujuk pada lingkungan atau situasi yang gak sehat secara mental. Misalnya workplace yang toxic, di mana ada bullying, politik kantor, atau tekanan berlebihan yang bikin stress.",
+        example: "Kantor lama gue toxic parah, makanya gue resign.",
+        votes: 145,
+        wordCount: 26,
+        isAccepted: false,
+      },
+
+      // Add more explanations for other words...
+      // KEPO explanations
+      {
+        wordId: wordMap.kepo.id,
+        userId: userMap.dewi.id, // @dewi
+        content:
+          "Kepo singkatan dari 'Knowing Every Particular Object' tapi sekarang artinya lebih ke penasaran berlebihan atau suka ngurusin urusan orang lain. Biasanya dipakai buat ngeledek orang yang terlalu ingin tahu.",
+        example: "Jangan kepo dong, itu urusan dia sama pacarnya.",
+        votes: 176,
+        wordCount: 24,
+        isAccepted: false,
       },
     ];
 

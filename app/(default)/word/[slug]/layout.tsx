@@ -35,7 +35,6 @@ export default async function WordDetailLayout({
           {/* Main Content Area (3/4) */}
           <div className="space-y-8 lg:col-span-3">
             {header} {/* Word title, stats, actions */}
-            {metadata} {/* Generation context */}
             {explanations} {/* Main explanations */}
             {comments} {/* Discussion */}
             {related} {/* Related words */}
@@ -44,6 +43,7 @@ export default async function WordDetailLayout({
 
           {/* Sidebar (1/4) */}
           <div className="space-y-6 lg:col-span-1">
+            {metadata} {/* Generation context */}
             {sidebar} {/* Stats, related, contributors */}
             {analytics} {/* Trends widget */}
           </div>
