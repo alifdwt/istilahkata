@@ -5,7 +5,6 @@ interface WordDetailLayoutProps {
   header: React.ReactNode;
   metadata: React.ReactNode;
   explanations: React.ReactNode;
-  comments: React.ReactNode;
   related: React.ReactNode;
   sidebar: React.ReactNode;
   analytics: React.ReactNode;
@@ -17,7 +16,6 @@ export default async function WordDetailLayout({
   header,
   metadata,
   explanations,
-  comments,
   related,
   sidebar,
   analytics,
@@ -36,7 +34,6 @@ export default async function WordDetailLayout({
           <div className="space-y-8 lg:col-span-3">
             {header} {/* Word title, stats, actions */}
             {explanations} {/* Main explanations */}
-            {comments} {/* Discussion */}
             {related} {/* Related words */}
             {children} {/* Additional content slot */}
           </div>

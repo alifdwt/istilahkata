@@ -1014,6 +1014,265 @@ async function main() {
       .returning();
     console.log(`✅ Inserted ${insertedExplanations.length} explanations`);
 
+    console.log("💬 Seeding comments...");
+    const commentsData = [
+      // Comments untuk explanation gabut pertama (daud's explanation)
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes('Akronim dari "gaji buta"')
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Nah ini penjelasan yang paling masuk akal! Di tempat kerja gw juga sering dengar istilah ini.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes('Akronim dari "gaji buta"')
+        )?.id,
+        userId: userMap.rani.id,
+        content:
+          "Tapi sekarang gabut udah meluas penggunaannya ya, gak cuma di kantor aja.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes('Akronim dari "gaji buta"')
+        )?.id,
+        userId: userMap.budi.id,
+        content:
+          "Betul banget, ini asal muasal kata gabut yang sebenarnya. Good explanation!",
+      },
+
+      // Comments untuk explanation gabut kedua (sinta's explanation)
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perasaan bosan ekstrem")
+        )?.id,
+        userId: userMap.david.id,
+        content:
+          "Ini relate banget sama kondisi gw pas liburan panjang kemarin 😅",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perasaan bosan ekstrem")
+        )?.id,
+        userId: userMap.dewi.id,
+        content:
+          "Gabut weekend tuh real banget, udah gak tau mau ngapain lagi.",
+      },
+
+      // Comments untuk skuy explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("singkatan dari 'ayo skuy'")
+        )?.id,
+        userId: userMap.daud.id,
+        content:
+          "Wah baru tau skuy itu kepanjangan dari ayo skuy. Kirain cuma slang biasa.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("singkatan dari 'ayo skuy'")
+        )?.id,
+        userId: userMap.budi.id,
+        content: "Anak-anak sekarang kreatif banget bikin kata-kata baru ya 👍",
+      },
+
+      // Comments untuk bucin explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("budak cinta")
+        )?.id,
+        userId: userMap.david.id,
+        content:
+          "Definisi yang akurat! Pernah jadi korban bucin juga sih dulu 😂",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("budak cinta")
+        )?.id,
+        userId: userMap.rani.id,
+        content:
+          "Bucin ini emang fenomena yang sering banget terjadi di relationship anak muda.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("budak cinta")
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Yang penting ada balance ya antara sayang sama pasangan tapi tetap jaga diri sendiri.",
+      },
+
+      // Comments untuk ghosting explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("menghilang tiba-tiba")
+        )?.id,
+        userId: userMap.dewi.id,
+        content:
+          "Ghosting ini toxic behavior banget menurutku. Better komunikasi yang jujur.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("menghilang tiba-tiba")
+        )?.id,
+        userId: userMap.budi.id,
+        content:
+          "Setuju, ghosting itu nyakitin dan bikin orang bingung. Mending speak up aja.",
+      },
+
+      // Comments untuk flex explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("pamer atau show off")
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Flex yang berlebihan emang cringe sih, tapi kalo sewajarnya ya gak masalah.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("pamer atau show off")
+        )?.id,
+        userId: userMap.rani.id,
+        content:
+          "Social media jaman sekarang penuh dengan orang yang suka flex 📱",
+      },
+
+      // Comments untuk toxic explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perilaku yang merusak")
+        )?.id,
+        userId: userMap.david.id,
+        content:
+          "Penting banget recognize toxic behavior ini. Red flags yang harus dihindari!",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perilaku yang merusak")
+        )?.id,
+        userId: userMap.dewi.id,
+        content:
+          "Toxic relationship/friendship memang harus segera ditinggalkan demi mental health.",
+      },
+
+      // Comments untuk salty explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perasaan kesel, iri")
+        )?.id,
+        userId: userMap.budi.id,
+        content:
+          "Salty ini natural human emotion sih, yang penting gimana cara handle-nya.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("perasaan kesel, iri")
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Kadang kita salty tanpa sadar ya, apalagi kalo lagi down mood.",
+      },
+
+      // Comments untuk vibes explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("energi atau aura")
+        )?.id,
+        userId: userMap.rani.id,
+        content:
+          "Vibes ini emang something yang bisa dirasain tapi susah dijelasin ya.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("energi atau aura")
+        )?.id,
+        userId: userMap.budi.id,
+        content:
+          "First impression itu mostly dari vibes yang kita pancarkan ke orang lain.",
+      },
+
+      // Comments untuk santuy explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("santai dan enjoy")
+        )?.id,
+        userId: userMap.dewi.id,
+        content:
+          "Santuy mindset ini healthy banget di era yang serba fast-paced kayak sekarang.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("santai dan enjoy")
+        )?.id,
+        userId: userMap.david.id,
+        content:
+          "Work-life balance yang santuy tapi tetep produktif, that's the goal!",
+      },
+
+      // Comments untuk kepo explanation
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("Knowing Every Particular Object")
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Wah baru tau kepanjangan KEPO yang ini! Selama ini tahunya dari bahasa Hokkien.",
+      },
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("Knowing Every Particular Object")
+        )?.id,
+        userId: userMap.rani.id,
+        content:
+          "Ada dua versi ya ternyata etimologi kata kepo. Interesting! 🤔",
+      },
+
+      // Additional comments untuk diversifikasi
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("kondisi mental ketika otak")
+        )?.id,
+        userId: userMap.dewi.id,
+        content:
+          "Analisis psikologis yang menarik! Gabut vs malas emang beda ya ternyata.",
+      },
+
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("komunikasi pasif-agresif")
+        )?.id,
+        userId: userMap.sinta.id,
+        content:
+          "Ghosting sebagai passive-aggressive behavior, perspective yang bagus ini.",
+      },
+
+      {
+        explanationId: insertedExplanations.find((exp) =>
+          exp.content.includes("kehilangan identitas")
+        )?.id,
+        userId: userMap.david.id,
+        content:
+          "Bucin yang sampai lose identity, this hits different. Harus aware sama hal ini.",
+      },
+    ];
+
+    // Filter out any comments with null explanationId
+    const validCommentsData = commentsData.filter(
+      (comment) => comment.explanationId
+    );
+
+    if (validCommentsData.length > 0) {
+      const insertedComments = await db
+        .insert(comments)
+        .values(validCommentsData)
+        .returning();
+      console.log(`✅ Inserted ${insertedComments.length} comments`);
+    } else {
+      console.log("⚠️ No valid comments to insert");
+    }
+
     console.log("🎉 Database seeding completed successfully!");
     console.log("\n📝 Context Examples Added:");
     wordsData.forEach((word, index) => {
