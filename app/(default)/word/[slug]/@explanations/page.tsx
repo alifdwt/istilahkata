@@ -1,10 +1,11 @@
-import { MessageCircle, Plus } from "lucide-react";
+import { Plus, MessageCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 
-import { ExplanationCard } from "@/components/features/words/voting-components";
+import { EnhancedExplanationCard } from "@/components/features/words/enhanced-explanation-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getCommentsByExplanationId } from "@/lib/db/queries/comments";
 import {
   getWordBySlug,
   getExplanationsByWordSlug,
@@ -27,9 +28,24 @@ export default async function WordExplanations({
   // Get explanations
   const explanations = await getExplanationsByWordSlug(slug, 20);
 
+  // Get comments for each explanation (in parallel)
+  const explanationsWithComments = await Promise.all(
+    explanations.map(async (explanation) => {
+      const comments = await getCommentsByExplanationId(explanation.id, 10);
+      return {
+        ...explanation,
+        comments,
+      };
+    })
+  );
+
   // Separate accepted and other explanations
-  const acceptedExplanation = explanations.find((exp) => exp.isAccepted);
-  const otherExplanations = explanations.filter((exp) => !exp.isAccepted);
+  const acceptedExplanation = explanationsWithComments.find(
+    (exp) => exp.isAccepted
+  );
+  const otherExplanations = explanationsWithComments.filter(
+    (exp) => !exp.isAccepted
+  );
 
   return (
     <div className="space-y-8">
@@ -52,7 +68,11 @@ export default async function WordExplanations({
 
       {/* Accepted Explanation - Highlighted */}
       {acceptedExplanation && (
-        <ExplanationCard explanation={acceptedExplanation} showVoting={true} />
+        <EnhancedExplanationCard
+          explanation={acceptedExplanation}
+          comments={acceptedExplanation.comments}
+          showVoting={true}
+        />
       )}
 
       {/* Other Explanations */}
@@ -65,9 +85,10 @@ export default async function WordExplanations({
 
           <div className="space-y-4">
             {otherExplanations.map((explanation, index) => (
-              <ExplanationCard
+              <EnhancedExplanationCard
                 key={explanation.id}
                 explanation={explanation}
+                comments={explanation.comments}
                 index={index + 1}
                 showVoting={true}
               />
