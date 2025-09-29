@@ -1,4 +1,3 @@
-// app/words/page.tsx - Complete implementation with sidebar
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
