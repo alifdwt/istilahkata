@@ -139,6 +139,10 @@ async function main() {
       .returning();
     console.log(`✅ Inserted ${insertedGenerations.length} generations`);
 
+    const generationMap = Object.fromEntries(
+      insertedGenerations.map((gen) => [gen.code, gen])
+    );
+
     // Seed languages
     console.log("🌐 Seeding languages...");
     const languagesData = [
@@ -199,6 +203,8 @@ async function main() {
         totalVotes: 500,
         totalWordCount: 1500,
         role: "admin" as const,
+        birthYear: 1999,
+        generationId: generationMap["gen-z"].id,
       },
       {
         username: "daud",
@@ -210,6 +216,8 @@ async function main() {
         totalVotes: 189,
         totalWordCount: 620,
         role: "user" as const,
+        birthYear: 1995,
+        generationId: generationMap["milenial"].id,
       },
       {
         username: "sinta",
@@ -221,6 +229,8 @@ async function main() {
         totalVotes: 167,
         totalWordCount: 480,
         role: "moderator" as const,
+        birthYear: 1997,
+        generationId: generationMap["gen-z"].id,
       },
       {
         username: "david",
@@ -232,6 +242,8 @@ async function main() {
         totalVotes: 245,
         totalWordCount: 850,
         role: "user" as const,
+        birthYear: 2011,
+        generationId: generationMap["gen-alpha"].id,
       },
       {
         username: "rani",
@@ -243,6 +255,8 @@ async function main() {
         totalVotes: 203,
         totalWordCount: 710,
         role: "user" as const,
+        birthYear: 2000,
+        generationId: generationMap["gen-z"].id,
       },
       {
         username: "budi",
@@ -254,6 +268,8 @@ async function main() {
         totalVotes: 157,
         totalWordCount: 500,
         role: "user" as const,
+        birthYear: 1985,
+        generationId: generationMap["milenial"].id,
       },
       // dewi
       {
@@ -266,6 +282,8 @@ async function main() {
         totalVotes: 157,
         totalWordCount: 500,
         role: "user" as const,
+        birthYear: 1973,
+        generationId: generationMap["gen-x"].id,
       },
     ];
 
@@ -275,9 +293,6 @@ async function main() {
     // Create mapping objects
     const userMap = Object.fromEntries(
       insertedUsers.map((user) => [user.username, user])
-    );
-    const generationMap = Object.fromEntries(
-      insertedGenerations.map((gen) => [gen.code, gen])
     );
     const languageMap = Object.fromEntries(
       insertedLanguages.map((lang) => [lang.code, lang])

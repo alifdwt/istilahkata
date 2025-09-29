@@ -23,20 +23,27 @@ export const wordStatusEnum = pgEnum("word_status", [
 ]);
 export const voteTypeEnum = pgEnum("vote_type", ["up", "down"]);
 
-// Reference Tables
+// Enhanced generations table with age ranges
 export const generations = pgTable(
   "generations",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    code: varchar("code", { length: 20 }).notNull().unique(), // 'gen-alpha', 'gen-z', etc
-    name: varchar("name", { length: 50 }).notNull(), // 'Generasi Alpha', 'Generasi Z'
-    shortName: varchar("short_name", { length: 20 }).notNull(), // 'Gen Alpha', 'Gen Z'
+    code: varchar("code", { length: 20 }).notNull().unique(),
+    name: varchar("name", { length: 50 }).notNull(),
+    shortName: varchar("short_name", { length: 20 }).notNull(),
     description: text("description"),
+
+    // Age/year ranges
     startYear: integer("start_year").notNull(),
-    endYear: integer("end_year"),
-    colorClass: varchar("color_class", { length: 50 }).notNull(), // 'bg-purple-100 text-purple-700'
-    iconClass: varchar("icon_class", { length: 50 }), // Optional icon
+    endYear: integer("end_year"), // nullable for ongoing generations
+
+    // Display settings
+    colorClass: varchar("color_class", { length: 50 }).notNull(),
+    iconClass: varchar("icon_class", { length: 50 }),
     sortOrder: integer("sort_order").default(0),
+
+    // Metadata
+    totalUsers: integer("total_users").default(0), // Computed field
     isActive: boolean("is_active").default(true),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -45,6 +52,10 @@ export const generations = pgTable(
     codeIdx: index("generations_code_idx").on(table.code),
     activeIdx: index("generations_active_idx").on(table.isActive),
     sortIdx: index("generations_sort_idx").on(table.sortOrder),
+    yearRangeIdx: index("generations_year_range_idx").on(
+      table.startYear,
+      table.endYear
+    ),
   })
 );
 
@@ -77,20 +88,102 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     username: varchar("username", { length: 50 }).notNull().unique(),
     email: varchar("email", { length: 255 }).notNull().unique(),
-    emailVerified: boolean("email_verified").default(false), // Required by Better Auth
     displayName: varchar("display_name", { length: 100 }),
     avatar: text("avatar"),
     bio: text("bio"),
+
+    // NEW: Generation fields
+    birthYear: integer("birth_year"), // User's birth year
+    generationId: uuid("generation_id").references(() => generations.id), // Computed generation
+    isGenerationPublic: boolean("is_generation_public").default(true), // Privacy setting
+    generationUpdatedAt: timestamp("generation_updated_at"), // When generation was last computed
+
+    // Existing fields
     totalVotes: integer("total_votes").default(0),
     totalWordCount: integer("total_word_count").default(0),
     role: userRoleEnum("role").default("user"),
     isActive: boolean("is_active").default(true),
+
+    // Auth fields
+    emailVerified: boolean("email_verified").default(false),
+    password: text("password"), // For email/password auth
+
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),
     emailIdx: index("users_email_idx").on(table.email),
+    generationIdx: index("users_generation_idx").on(table.generationId), // NEW index
+    birthYearIdx: index("users_birth_year_idx").on(table.birthYear), // NEW index
+  })
+);
+
+// User generation preferences table
+export const userGenerationPreferences = pgTable(
+  "user_generation_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // Privacy settings
+    showGenerationOnProfile: boolean("show_generation_on_profile").default(
+      true
+    ),
+    showGenerationOnContributions: boolean(
+      "show_generation_on_contributions"
+    ).default(true),
+    allowGenerationFiltering: boolean("allow_generation_filtering").default(
+      true
+    ),
+
+    // Notification preferences
+    notifyGenerationTrends: boolean("notify_generation_trends").default(false),
+    notifyGenerationMilestones: boolean("notify_generation_milestones").default(
+      false
+    ),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("user_generation_preferences_user_idx").on(table.userId),
+  })
+);
+
+// User generation history (for analytics)
+export const userGenerationHistory = pgTable(
+  "user_generation_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    generationId: uuid("generation_id")
+      .notNull()
+      .references(() => generations.id),
+
+    // Context
+    changeReason: varchar("change_reason", { length: 50 }), // 'initial_signup', 'birth_year_update', 'manual_correction'
+    previousGenerationId: uuid("previous_generation_id").references(
+      () => generations.id
+    ),
+    changedBy: uuid("changed_by").references(() => users.id), // Admin who made change
+
+    // Metadata
+    isActive: boolean("is_active").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("user_generation_history_user_idx").on(table.userId),
+    generationIdx: index("user_generation_history_generation_idx").on(
+      table.generationId
+    ),
+    createdAtIdx: index("user_generation_history_created_at_idx").on(
+      table.createdAt
+    ),
   })
 );
 
@@ -334,17 +427,6 @@ export const languagesRelations = relations(languages, ({ many }) => ({
   wordLanguages: many(wordLanguages),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
-  // Auth relations
-  accounts: many(accounts),
-  sessions: many(sessions),
-  // App relations
-  requestedWords: many(words),
-  explanations: many(explanations),
-  votes: many(votes),
-  comments: many(comments),
-}));
-
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, {
     fields: [accounts.userId],
@@ -443,3 +525,56 @@ export const wordViewsRelations = relations(wordViews, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  // Auth relations
+  accounts: many(accounts),
+  sessions: many(sessions),
+  // App relations
+  requestedWords: many(words),
+  generation: one(generations, {
+    fields: [users.generationId],
+    references: [generations.id],
+  }),
+  generationPreferences: one(userGenerationPreferences, {
+    fields: [users.id],
+    references: [userGenerationPreferences.userId],
+  }),
+  generationHistory: many(userGenerationHistory),
+  words: many(words),
+  explanations: many(explanations),
+  votes: many(votes),
+  comments: many(comments),
+}));
+
+export const userGenerationPreferencesRelations = relations(
+  userGenerationPreferences,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userGenerationPreferences.userId],
+      references: [users.id],
+    }),
+  })
+);
+
+export const userGenerationHistoryRelations = relations(
+  userGenerationHistory,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userGenerationHistory.userId],
+      references: [users.id],
+    }),
+    generation: one(generations, {
+      fields: [userGenerationHistory.generationId],
+      references: [generations.id],
+    }),
+    previousGeneration: one(generations, {
+      fields: [userGenerationHistory.previousGenerationId],
+      references: [generations.id],
+    }),
+    changedByUser: one(users, {
+      fields: [userGenerationHistory.changedBy],
+      references: [users.id],
+    }),
+  })
+);
