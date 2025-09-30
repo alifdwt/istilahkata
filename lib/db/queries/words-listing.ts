@@ -339,17 +339,40 @@ export async function getWordsListing(
     )
     .orderBy(desc(explanations.votes));
 
-  // Get total count for pagination
-  const totalCountResult = await db
-    .select({ count: count() })
-    .from(words)
-    .where(and(...conditions));
+  // Get total count using the same pattern
+  let totalCount = 0;
 
-  const totalItems = totalCountResult[0]?.count || 0;
-  const totalPages = Math.ceil(totalItems / limit);
+  if (generation) {
+    const generationCodes = Array.isArray(generation)
+      ? generation
+      : [generation];
+    const countResult = await db
+      .select({ count: count() })
+      .from(words)
+      .innerJoin(wordGenerations, eq(wordGenerations.wordId, words.id))
+      .innerJoin(generations, eq(wordGenerations.generationId, generations.id))
+      .where(and(...conditions, inArray(generations.code, generationCodes)));
+    totalCount = countResult[0]?.count || 0;
+  } else if (language) {
+    const languageCodes = Array.isArray(language) ? language : [language];
+    const countResult = await db
+      .select({ count: count() })
+      .from(words)
+      .innerJoin(wordLanguages, eq(wordLanguages.wordId, words.id))
+      .innerJoin(languages, eq(wordLanguages.languageId, languages.id))
+      .where(and(...conditions, inArray(languages.code, languageCodes)));
+    totalCount = countResult[0]?.count || 0;
+  } else {
+    const countResult = await db
+      .select({ count: count() })
+      .from(words)
+      .where(and(...conditions));
+    totalCount = countResult[0]?.count || 0;
+  }
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   // Transform data into WordCardData format
-  //   @ts-expect-error Type 'WordCardData[]' is not assignable to type
   const wordsData: WordCardData[] = wordsResult.map((word) => {
     // Get generations for this word
     const wordGens = wordGenerationsData
@@ -359,7 +382,7 @@ export async function getWordsListing(
         name: wg.name,
         shortName: wg.shortName,
         colorClass: wg.colorClass,
-        isPrimary: wg.isPrimary,
+        isPrimary: wg.isPrimary ?? false, // Handle null
       }));
 
     // Get languages for this word
@@ -369,7 +392,7 @@ export async function getWordsListing(
         code: wl.code,
         name: wl.name,
         flag: wl.flag,
-        isPrimary: wl.isPrimary,
+        isPrimary: wl.isPrimary ?? false, // Handle null
       }));
 
     // Get top explanation for this word
@@ -417,7 +440,7 @@ export async function getWordsListing(
     pagination: {
       currentPage: page,
       totalPages,
-      totalItems,
+      totalItems: totalCount,
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
     },
