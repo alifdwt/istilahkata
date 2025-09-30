@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protected routes that require authentication
-  const protectedRoutes = ["/dashboard", "/word/create", "/profile"];
+  const protectedRoutes = ["/dashboard", "/contribute/word", "/profile"];
   const authRoutes = ["/login", "/register"];
 
   // Redirect authenticated users away from auth pages
